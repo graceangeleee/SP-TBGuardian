@@ -1,89 +1,250 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity} from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import { Redirect } from 'expo-router';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Palette from '../../../../Constants/Palette';
 import { FontAwesome } from '@expo/vector-icons';
 // import { TouchableOpacity } from "react-native-gesture-handler";
 import { Link } from "expo-router";
+import { Session } from "@supabase/supabase-js";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../../../../supabase';
 
 
-export default function PatientDashboard() {
-const [percentage, setPercentage] = useState(50)
-const [usertype, setUserType]= useState("Patient")
-const [rewards, setRewards] = useState(23);
-const [monitoring, setMonitoring] = useState(20);
-const [done, setDone] = useState(15);
-const [missing, setMissing] = useState(8);
-  return (
-    <ScrollView>
-                {/* <View style={{position: 'absolute', height: 200, width: 100, backgroundColor: Palette.background, borderBottomLeftRadius: 90}}>
+interface submissionType{
+    created_at: Date,
+    deadline: Date,
+    id: number,
+    patientid: string,
+    status: boolean,
+    number: number
+}
 
-                </View> */}
+
+export default function PatientDashboard({ session }: { session: Session }) {
+    const [percentage, setPercentage] = useState(0);
+    const [tosubmit, setToSubmit] = useState(0);
+    const [rewards, setRewards] = useState(23);
+    const [loading, setLoading] = useState(false);
+    const [status, setStatus] = useState("");
+    const [pending, setPending] = useState<submissionType[]>([])
+    const [missing, setMissing] = useState<submissionType[]>([])
+
+    useEffect(() => {
+        calcualtePercentage();
+    }, [tosubmit])
+
+    useEffect(() => {
+        getDetails();
+    }, [session])
+
+    useEffect(() => {
+        changeStatus()
+    }, [percentage])
+
+
+    const changeStatus = () => {
+        if(percentage === 0){
+            setStatus("Get started")
+        }else if(percentage > 0 && percentage < 50){
+            setStatus("Keep going!")
+        }else if(percentage === 50){
+            setStatus("You're halfway there!")
+        }else if (percentage === 100){
+            setStatus("Done!")
+        }else{
+            setStatus("You're almost there!")
+        }
+    }
+
+    async function getDetails(){
+        setLoading(true);
+        try{
+            const id = await AsyncStorage.getItem("id");
+            if(id != null){
+                getPendingDetails(id)
+                getUserData(id)
+                getMissing(id)
+            }else{
+                console.log("No session")
+            }
+        }catch(error){
+            console.log("Error retrieving data")
+        }finally{
+            setLoading(false)
+        }
+    }
+
+    async function getMissing (userid:string){
+        const date = new Date().toISOString();
+
+        try{
+            if(userid === null || userid ===""){
+                throw new Error('No user logged in');
+            }else{
+                const { data, error, status } = await supabase
+                .from('submissions')
+                .select()
+                .eq("patientid", userid)
+                .eq("status", "FALSE")
+                .lt("deadline", date)
+            
+
+                if (error && status !==406){
+                    throw error;
+                }
+
+                if(data){
+                    setMissing(data)
+                }
+            }
+        } catch (error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
+        }finally{
+            return
+        }
+    }
+
+    async function getPendingDetails(userid: string){
+        const date = new Date().toISOString();
+        try{
+            if(userid === null || userid ===""){
+                throw new Error('No user logged in');
+            }else{
+                const { data, error, status } = await supabase
+                .from('submissions')
+                .select()
+                .eq("patientid", userid)
+                .eq("status", "FALSE")
+                .gt("deadline", date)
+            
+
+                if (error && status !==406){
+                    throw error;
+                }
+
+                if(data){
+                    setPending(data)
+                }
+            }
+        } catch (error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
+        }finally{
+            return
+        }
+    }
+
+    async function getUserData(userid:string){
+        try{
+            if (userid === null || userid === "") {
+                throw new Error('No user logged in');
+            } else {
+                const { data, error, status } = await supabase
+                    .from('users')
+                    .select('to_submit')
+                    .eq('id', userid)
+                    .single();
+                
+                if(data){
+                    setToSubmit(data.to_submit)
+                }
+            }
+        }catch (error) {
+            if (error instanceof Error) {
+                Alert.alert(error.message);
+            }
+        } finally {
+            return
+        }
+    }
+
+    const calcualtePercentage = () => {
+        const percent = ((60-tosubmit) / 60) * 100
+        setPercentage(percent)
+        changeStatus();
+    }
+
+
+    return (
+        loading ? (
+            <></>
+        ) : (
+            <ScrollView>
                 <View style={styles.statuscontainer}>
-                    <View style={{flexDirection: 'row'}}>
-                        <Text style={[styles.statustext, {flex: 2.5}]}>Status </Text>
-                        <View style={{flex: 1}}>
+                    <View style={{ flexDirection: 'row' }}>
+                        <Text style={[styles.statustext, { flex: 2.5 }]}>{status}</Text>
+                        <View style={{ flex: 1 }}>
                             <View style={[styles.percentage, styles.elevation]}>
-                                <Text style={styles.status}>{percentage}%</Text> 
+                                <Text style={styles.status}>{percentage}%</Text>
                             </View>
                         </View>
                     </View>
                 </View>
+                <View style={[styles.statuscontainer, {flexDirection: 'row', backgroundColor: Palette.focused, padding: 15}]}>
+                    <FontAwesome name="exclamation-triangle" size={35} color="red" />
+                    <Text style={{fontFamily: 'Heading', fontSize: 20, color: Palette.buttonOrLines, marginLeft: 5}}>You have {missing.length} missing submission/s!</Text>
+                </View>
+                
                 <View style={styles.horizontalcontainer}>
-                    <View style={[styles.colcontainer, {backgroundColor: Palette.shadowAccent}, styles.shadowprop, styles.elevation]}>
-                        <View style={{ backgroundColor: Palette.shadowAccent, flex: 2}}>
-                            <View style={{flexDirection: 'row', backgroundColor: Palette.shadowAccent, alignItems: 'center'}}>
-                                <FontAwesome style={{marginRight: 10}} name="tasks" size={24} color={'white'} />
-                                <Text style={styles.detailheader}>Next</Text>
+                    {pending.length > 0 ? (
+                        <View style={[styles.colcontainer, { backgroundColor: Palette.shadowAccent }, styles.shadowprop, styles.elevation]}>
+                            <View style={{ backgroundColor: Palette.shadowAccent, flex: 2 }}>
+                                <View style={{ flexDirection: 'row', backgroundColor: Palette.shadowAccent, alignItems: 'center' }}>
+                                    <FontAwesome style={{ marginRight: 10 }} name="tasks" size={24} color={'white'} />
+                                    <Text style={styles.detailheader}>Next</Text>
+                                </View>
+                                <Text style={styles.detailheader}>submission</Text>
+                                <Text style={styles.details}>{pending[0].deadline.toString()}</Text>
                             </View>
-                            <Text style={styles.detailheader}>submission</Text>
-                            <Text style={styles.details}>Placeholder Date</Text>
+                            <Link href={{pathname: "/submissionbin", params: {number: pending[0].number, deadline: pending[0].deadline, status: pending[0].status}}} asChild style={styles.button}>
+                                <TouchableOpacity>
+                                    <Text style={styles.buttontext}>Submit</Text>
+                                </TouchableOpacity>
+                            </Link>
                         </View>
-                        <Link href="/submissionbin" asChild style={styles.button}>
-                            <TouchableOpacity >
-                                <Text style={styles.buttontext}>Submit</Text>
-                            </TouchableOpacity>
-                        </Link>
-                    </View>
-                    <View style={[styles.colcontainer, {backgroundColor: Palette.buttonOrLines}, styles.shadowprop, styles.elevation]}>
-                        <View style={{flexDirection: 'row', backgroundColor: Palette.buttonOrLines, alignItems: 'center'}}>
-                            <FontAwesome style={{marginRight: 10}} name="exclamation-triangle" size={24} color={'white'} />
+                    ) : (
+                        <View style={[styles.colcontainer, { backgroundColor: Palette.shadowAccent }, styles.shadowprop, styles.elevation]}>
+                            <Text>No pending submissions</Text>
+                        </View>
+                    )}
+                    <View style={[styles.colcontainer, { backgroundColor: Palette.buttonOrLines }, styles.shadowprop, styles.elevation]}>
+                        <View style={{ flexDirection: 'row', backgroundColor: Palette.buttonOrLines, alignItems: 'center' }}>
+                            <FontAwesome style={{ marginRight: 10 }} name="exclamation-triangle" size={24} color={'white'} />
                             <Text style={styles.detailheader}>Reminders</Text>
                         </View>
-                        
+    
                         <Text style={styles.details}>Placeholder Date</Text>
                     </View>
-                    
-                </View> 
+    
+                </View>
                 <View style={[styles.rewardscontainer, styles.elevation]}>
-                    <View style={{flexDirection: "row", alignItems: 'center'}}>
-                        <View style={{flex: 1,flexDirection: 'row', alignItems: 'center'}}>
+                    <View style={{ flexDirection: "row", alignItems: 'center' }}>
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
                             <FontAwesome name="star" size={30} color={Palette.accent} />
                             <Text style={styles.rewardsearned}>{rewards}/100</Text>
                         </View>
-                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                            <Text style={styles.reward}>{100-rewards}</Text>
-                            <FontAwesome style={{marginLeft: 5, marginRight: 5}} name="star" size={20} color={Palette.accent} />
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text style={styles.reward}>{100 - rewards}</Text>
+                            <FontAwesome style={{ marginLeft: 5, marginRight: 5 }} name="star" size={20} color={Palette.accent} />
                             <Text style={styles.reward}>to a reward</Text>
                         </View>
                     </View>
-   
-                        {/* <View style={{height: 8, alignContent: 'center', backgroundColor: Palette.buttonOrLines, marginTop: 20, marginBottom: 10, borderRadius: 90, overflow:'visible'}}>
-                            <View style={{height:20, width: 20, backgroundColor: Palette.accent, borderRadius: 90, flex: 1, position: 'absolute'}}></View>
-                            <View style={{height:20, width: 20, backgroundColor: Palette.accent, borderRadius: 90, flex: 1, position: 'absolute'}}></View>
-
-                        </View>
-  */}
-                    <Text style={[styles.rewardins, {alignSelf: 'center'}]}>Earn reward points by complying to your medication and submitting videos on time</Text>
-                    <Link href='/(drawer)/(tabs)/rewards' asChild style={[styles.button, {marginTop: 10,}]}>
-                        <TouchableOpacity >
+    
+    
+                    <Text style={[styles.rewardins, { alignSelf: 'center' }]}>Earn reward points by complying to your medication and submitting videos on time</Text>
+                    <Link href='/(drawer)/(tabs)/rewards' asChild style={[styles.button, { marginTop: 10, }]}>
+                        <TouchableOpacity>
                             <Text style={styles.buttontext}>Show rewards</Text>
                         </TouchableOpacity>
                     </Link>
-                </View>     
+                </View>
             </ScrollView>
-  )
+        )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -125,33 +286,35 @@ const styles = StyleSheet.create({
         borderWidth: 4,
     },
     status:{
-        // fontFamily: 'Heading',
+        fontFamily: 'Heading',
         fontSize: 25,
         color: 'white'
 
     },
     statustext:{
-        // fontFamily: 'Heading',
+        fontFamily: 'Heading',
         fontSize: 20,
         alignSelf: 'center',
         marginLeft: 20,
         color: Palette.buttonOrLines
     },
     statuscontainer:{
-        margin: 15,
+        marginTop: 20,
+        marginLeft: 15, 
+        marginRight: 15,
         // borderColor: Palette.buttonOrLines,
         // borderWidth: 2,
         alignContent: 'center',
         borderRadius: 15,
     },
     details:{
-        // fontFamily: 'Poppins',
+        fontFamily: 'Poppins',
         fontSize: 16,
         marginTop: 10,
         color: 'white'
     },
     rewardins:{
-        // fontFamily: 'Poppins',
+        fontFamily: 'Poppins',
         fontSize: 16,
         marginTop: 10,
         color: Palette.buttonOrLines
@@ -167,16 +330,16 @@ const styles = StyleSheet.create({
         shadowColor: '#52006A',
     },
     rewardsearned:{
-        // fontFamily: 'Heading',
+        fontFamily: 'Heading',
         fontSize: 20,
         marginLeft: 15
     },
     reward:{
-        // fontFamily: 'Subheading',
+        fontFamily: 'Subheading',
         fontSize: 20,
     },
     detailheader:{
-        // fontFamily: 'Heading',
+        fontFamily: 'Heading',
         fontSize: 20,
         color: 'white'
     },
@@ -188,18 +351,18 @@ const styles = StyleSheet.create({
         borderWidth: 1
     },
     buttontext:{
-        // fontFamily: 'Poppins',
+        fontFamily: 'Poppins',
         fontSize: 16,
         alignSelf: 'center',
         color: 'white'
     },
     workerdashboard:{
-        // fontFamily: 'Heading',
+        fontFamily: 'Heading',
         fontSize: 30,
         color: 'white'
     },
     count:{
-        // fontFamily: 'Poppins',
+        fontFamily: 'Poppins',
         fontSize: 30,
         color: 'white'
     },

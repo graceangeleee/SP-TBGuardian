@@ -18,3 +18,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+
+// DB Password: TBGuardian123!
+// https://znwimltsagawwpauhjsw.supabase.co
+// VeVquM6Ps9Ql/ly/3HJrJVFmEXBQxF8cXYpjuU04W8kqU3JKE0gFLc0kKnrwnIMYnbWnFV+qkUh1cuk0rQoyAw==

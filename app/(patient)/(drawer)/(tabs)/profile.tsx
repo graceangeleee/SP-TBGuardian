@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Alert, Image, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Alert, Image, StyleSheet, SafeAreaView } from "react-native";
 import { useEffect, useState } from "react";
 import Palette from "../../../../Constants/Palette";
 import { Session } from "@supabase/supabase-js";
@@ -6,6 +6,7 @@ import { supabase } from "../../../../supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ProfileStatus from "../../../../components/profilestatus";
 import ProfileDetails from "../../../../components/profiledetails";
+
 
 export default function Profile({ session }: { session: Session }) {
     const [firstname, setFirstname] = useState("");
@@ -33,7 +34,6 @@ export default function Profile({ session }: { session: Session }) {
         try {
             const id = await AsyncStorage.getItem("id");
             if (id !== null) {
-                console.log(id);
                 getProfile(id);
             } else {
                 console.log("No id");
@@ -44,7 +44,6 @@ export default function Profile({ session }: { session: Session }) {
     }
 
     async function getProfile(userid: string){
-        console.log("here");
         try {
             setLoading(true);
             if (userid === null || userid === "") {
@@ -92,7 +91,7 @@ export default function Profile({ session }: { session: Session }) {
 
 
     return (
-        <View style={{ flex: 1, backgroundColor: Palette.accent }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: Palette.accent }}>
             {loading ? (
                 <></>
             ) : (
@@ -104,16 +103,16 @@ export default function Profile({ session }: { session: Session }) {
                         <Text style={styles.number}>{email}</Text>
                     </View>
                     <ScrollView style={styles.details}>
-                        <View style={styles.statusheader}>
+                        {/* <View style={styles.statusheader}>
                             <ProfileStatus title="Submitted" detail={10}/>
                             <ProfileStatus title="Pending" detail={50}/>
                             <ProfileStatus title="Missing" detail={0}/>
-                        </View>
+                        </View> */}
                         <ProfileDetails title="Program" detail={"Placeholder program"}/>
                         <ProfileDetails title="Assigned DOTS Center" detail={"Placeholder center"}/>
                         <ProfileDetails title="Age" detail={age.toString()}/>
                         <ProfileDetails title="Gender" detail={gender}/>
-                        <ProfileDetails title="Blood Type" detail={"AB-"}/>
+                        {/* <ProfileDetails title="Blood Type" detail={"AB-"}/> */}
                         <ProfileDetails title="Height" detail={`${height} cm`}/>
                         <ProfileDetails title="Weight" detail={`${weight} kg`}/>
                         <ProfileDetails title="Date of Birth" detail={birthday.toISOString().split('T')[0]}/>
@@ -121,7 +120,7 @@ export default function Profile({ session }: { session: Session }) {
                     </ScrollView>
                 </View>
             )}
-        </View>
+        </SafeAreaView>
     );
 }
 
