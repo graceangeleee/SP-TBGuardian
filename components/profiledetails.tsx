@@ -28,14 +28,15 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         paddingLeft: 20,
         paddingRight: 20,
-        paddingTop: 10,
-        paddingBottom: 10,
+        paddingTop: 15,
+        paddingBottom: 15,
         backgroundColor: 'transparent'
     },
     title:{
         fontFamily: 'Heading',
         fontSize: 16,
-        flex: 1
+        flex: 1,
+        color: 'white'
     },
     detail:{
         fontFamily: 'Poppins',

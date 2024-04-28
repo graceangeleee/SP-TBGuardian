@@ -1,8 +1,10 @@
-import { Text, TextInput, SafeAreaView, Button, Alert, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+
 import { useState, useEffect } from "react";
 import {Picker} from '@react-native-picker/picker';
 import DatePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { supabase } from "../../supabase";
+import { Text, TextInput, SafeAreaView, Button, Alert, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import React from "react";
 
 const AddPatient = () => {
     const [firstname, setFirstname] = useState("");

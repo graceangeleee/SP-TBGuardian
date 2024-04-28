@@ -21,10 +21,10 @@ export default function Layout() {
 
   return (
     <Stack>
-        <Stack.Screen name="(drawer)" options={{ headerShown: false}} initialParams={{usertype: "patient"}} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="addpatient" options={{headerTitle: "Add Patient", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines}}/>
-        <Stack.Screen name="submissionbin" options={{presentation: 'modal'}}/>
+        <Stack.Screen name="(drawer)" options={{headerShown: false}} initialParams={{usertype: "patient"}} />
+        {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
+        {/* <Stack.Screen name="addpatient" options={{headerTitle: "Add Patient", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines}}/> */}
+        <Stack.Screen name="submissionbin" options={{presentation: 'modal', headerBackTitle:"Back", headerTitle: "Submission Bin"}}/>
       </Stack>
   );
 }

@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity} from 'react-native';
+import React from 'react';
 import { Redirect } from 'expo-router';
 import { useState } from "react";
 import Palette from '../../../../Constants/Palette';
@@ -13,6 +14,7 @@ export default function WorkerDashboard() {
 const [monitoring, setMonitoring] = useState(20);
 const [done, setDone] = useState(15);
 const [missing, setMissing] = useState(8);
+
 
   return (
     <ScrollView>
