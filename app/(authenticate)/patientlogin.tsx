@@ -1,10 +1,18 @@
-import { StyleSheet, TextInput, Button, Pressable, View, Text, Alert} from 'react-native';
+import { StyleSheet, TextInput, Button, Pressable, View, Text, Alert, AppState} from 'react-native';
 import { useState, useEffect } from 'react';
 import Palette from '../../Constants/Palette';
 import { router } from 'expo-router';
 import { supabase } from '../../supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
+AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      supabase.auth.startAutoRefresh()
+    } else {
+      supabase.auth.stopAutoRefresh()
+    }
+})
 
   const PatientLogin = () => {
     const [username, setUsername] = useState('');
@@ -28,20 +36,29 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
     // }, [])
 
     async function signInWithEmail() {
-        setLoading(true)
-        const { error } = await supabase.auth.signInWithPassword({
-          email: username,
-          password: password,
-        })
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: username,
+                password: password,
+            });
     
-        if (error){
-            Alert.alert(error.message)
-            setLoading(false)
-        } else{
-            console.log("Logged in");
-            router.replace("/(patient)")
+            if(data && data.session?.user.id){
+                // console.log(data)
+                // console.log("Logged in");
+                AsyncStorage.setItem("id", data.session.user.id)
+                router.replace("/(patient)");
+            }else{
+                Alert.alert("Please enter correct email and password")
+            }
+            
+        } catch (error) {
+            Alert.alert("Please enter correct email and password");
+        } finally {
+            setLoading(false);
         }
-      }
+    }
+    
     
       async function signUpWithEmail() {
         setLoading(true)

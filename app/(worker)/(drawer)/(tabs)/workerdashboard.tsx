@@ -2,13 +2,13 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity} from 'react-native';
 import { Redirect } from 'expo-router';
 import { useState } from "react";
-import Palette from '../../Constants/Palette';
+import Palette from '../../../../Constants/Palette';
 import { FontAwesome } from '@expo/vector-icons';
 // import { TouchableOpacity } from "react-native-gesture-handler";
 import { Link } from "expo-router";
 
 
-export default function Dashboard() {
+export default function WorkerDashboard() {
 
 const [monitoring, setMonitoring] = useState(20);
 const [done, setDone] = useState(15);
