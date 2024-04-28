@@ -10,15 +10,6 @@ import { FontAwesome,
 } from '@expo/vector-icons';
 import Palette from '../../../Constants/Palette';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { supabase } from '../../../supabase';
-
-interface SupabaseErrorResponse {
-    message: string;
-    code: string;
-    details?: string;
-
-  }
-  
 
 
 const PatientDrawerContent: React.FC<any> = (props) => {
@@ -27,21 +18,6 @@ const PatientDrawerContent: React.FC<any> = (props) => {
     useEffect(() => {
         console.log(pathname);
     }, [pathname]);
-
-    // async function signOutUser(): Promise<void> {
-    //     try {
-    //       const { error }: { error: SupabaseErrorResponse } = await supabase.auth.signOut();
-      
-    //       if (error) {
-    //         throw new Error(`${error.code}: ${error.message}`);
-    //       }
-      
-    //       console.log('User signed out successfully');
-    //     } catch (error) {
-    //       console.error('Error signing out:', error.message);
-    //     }
-    //   }
-      
 
     return (
     <DrawerContentScrollView style={styles.drawer} {...props}>

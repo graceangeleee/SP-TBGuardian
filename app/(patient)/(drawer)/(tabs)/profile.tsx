@@ -1,22 +1,107 @@
-import { View, Text, SafeAreaView, ScrollView } from "react-native";
-import { useState } from "react";
+import { View, Text, ScrollView, Alert, Image, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
 import Palette from "../../../../Constants/Palette";
-import { Dimensions } from "react-native";
-import { Image, StyleSheet } from "react-native";
+import { Session } from "@supabase/supabase-js";
+import { supabase } from "../../../../supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import ProfileStatus from "../../../../components/profilestatus";
 import ProfileDetails from "../../../../components/profiledetails";
 
+export default function Profile({ session }: { session: Session }) {
+    const [firstname, setFirstname] = useState("");
+    const [lastname, setLastname] = useState("");
+    const [email, setEmail] = useState("");
+    const [contact, setContact] = useState("");
+    const [age, setAge] = useState(0);
+    const [gender, setGender] = useState("");
+    const [height, setHeight] = useState(0);
+    const [weight, setWeight] = useState(0);
+    const [address, setAddress] = useState("");
+    const [birthday, setBirthday] = useState(new Date());
+    const [loading, setLoading] = useState(true);
+    
+    useEffect(() => {
+        retrieveData();
+    }, [session]);
 
-const Profile = () => {
-    const [usertype, setusertype] = useState("Patient");
+    useEffect(()=>{
+        calculateAge()
+    }, [birthday])
+
+    async function retrieveData(){
+        setLoading(true);
+        try {
+            const id = await AsyncStorage.getItem("id");
+            if (id !== null) {
+                console.log(id);
+                getProfile(id);
+            } else {
+                console.log("No id");
+            }
+        } catch (error) {
+            console.log("Error retrieving data");
+        }
+    }
+
+    async function getProfile(userid: string){
+        console.log("here");
+        try {
+            setLoading(true);
+            if (userid === null || userid === "") {
+                throw new Error('No user logged in');
+            } else {
+                const { data, error, status } = await supabase
+                    .from('users')
+                    .select()
+                    .eq('id', userid)
+                    .single();
+                
+                if (error && status !== 406) {
+                    throw error;
+                }
+
+                if (data) {
+                    console.log(data);
+                    setFirstname(data.firstname);
+                    setLastname(data.lastname);
+                    setAddress(data.address);
+                    setEmail(data.email);
+                    setContact(data.contact_number);
+                    setGender(data.gender);
+                    setHeight(data.height);
+                    setWeight(data.weight);
+                    setBirthday(new Date(data.birthday));
+    
+                }
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                Alert.alert(error.message);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const calculateAge = () => {
+        const currentDate = new Date();
+        const difference = currentDate.getTime() - birthday.getTime();
+        const calculatedAge = Math.floor(difference / (1000 * 60 * 60 * 24 * 365.25));
+        setAge(calculatedAge);
+    }
 
 
-    return  usertype==="Patient"? (
-               <View style={{flex: 1, backgroundColor: Palette.accent}}>
+    return (
+        <View style={{ flex: 1, backgroundColor: Palette.accent }}>
+            {loading ? (
+                <></>
+            ) : (
+                <View>
                     <View style={styles.header}>
                         <Image style={styles.image} source={{uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'}}/>
-                        <Text style={styles.name}>John Doe</Text>
-                        <Text style={styles.number}>+639951923729</Text>
+                        <Text style={styles.name}>{firstname} {lastname}</Text>
+                        <Text style={styles.number}>{contact}</Text>
+                        <Text style={styles.number}>{email}</Text>
                     </View>
                     <ScrollView style={styles.details}>
                         <View style={styles.statusheader}>
@@ -26,23 +111,18 @@ const Profile = () => {
                         </View>
                         <ProfileDetails title="Program" detail={"Placeholder program"}/>
                         <ProfileDetails title="Assigned DOTS Center" detail={"Placeholder center"}/>
-                        <ProfileDetails title="Email" detail={"johndoe@gmail.com"}/>
-                        <ProfileDetails title="Age" detail={25}/>
-                        <ProfileDetails title="Gender" detail={"Male"}/>
+                        <ProfileDetails title="Age" detail={age.toString()}/>
+                        <ProfileDetails title="Gender" detail={gender}/>
                         <ProfileDetails title="Blood Type" detail={"AB-"}/>
-                        <ProfileDetails title="Height" detail={168+" cm"}/>
-                        <ProfileDetails title="Weight" detail={50 + " kg"}/>
-                        <ProfileDetails title="Date of Birth" detail={"June 19, 1998"}/>
-                        <ProfileDetails title="Address" detail={"Placeholder Address"}/>
-                        
+                        <ProfileDetails title="Height" detail={`${height} cm`}/>
+                        <ProfileDetails title="Weight" detail={`${weight} kg`}/>
+                        <ProfileDetails title="Date of Birth" detail={birthday.toISOString().split('T')[0]}/>
+                        <ProfileDetails title="Address" detail={address}/>
                     </ScrollView>
-               </View>
-            ):(
-                <View>
-
                 </View>
-            )
-            
+            )}
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -78,5 +158,4 @@ const styles = StyleSheet.create({
         margin: 20,
         backgroundColor: 'transparent'
     }
-})
-export default Profile;
+});

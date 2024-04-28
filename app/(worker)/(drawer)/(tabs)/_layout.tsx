@@ -26,7 +26,7 @@ export default function TabLayout() {
       }}
       >
       <Tabs.Screen
-        name="patientdashboard"
+        name="workerdashboard"
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
