@@ -8,13 +8,14 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Link } from "expo-router";
 import { Session } from "@supabase/supabase-js";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { supabase } from '../../../../supabase';
 
 
 interface submissionType{
     created_at: Date,
     deadline: Date,
-    id: number,
+    id: string,
     patientid: string,
     status: boolean,
     number: number
@@ -23,7 +24,7 @@ interface submissionType{
 
 export default function PatientDashboard({ session }: { session: Session }) {
     const [percentage, setPercentage] = useState(0);
-    const [tosubmit, setToSubmit] = useState(0);
+    const [tosubmit, setToSubmit] =     useState(0);
     const [rewards, setRewards] = useState(23);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState("");
@@ -200,7 +201,7 @@ export default function PatientDashboard({ session }: { session: Session }) {
                                 <Text style={styles.detailheader}>submission</Text>
                                 <Text style={styles.details}>{pending[0].deadline.toString()}</Text>
                             </View>
-                            <Link href={{pathname: "/submissionbin", params: {number: pending[0].number, deadline: pending[0].deadline, status: pending[0].status}}} asChild style={styles.button}>
+                            <Link href={{pathname: "/submissionbin", params: {number: pending[0].number, deadline: pending[0].deadline, status: pending[0].status, id: pending[0].id}}} asChild style={styles.button}>
                                 <TouchableOpacity>
                                     <Text style={styles.buttontext}>Submit</Text>
                                 </TouchableOpacity>

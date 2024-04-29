@@ -4,7 +4,7 @@ import Palette from "../../../../Constants/Palette";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "../../../../supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import ProfileStatus from "../../../../components/profilestatus";
+// import ProfileStatus from "../../../../components/profilestatus";
 import ProfileDetails from "../../../../components/profiledetails";
 
 
@@ -70,7 +70,6 @@ export default function Profile({ session }: { session: Session }) {
                     setHeight(data.height);
                     setWeight(data.weight);
                     setBirthday(new Date(data.birthday));
-    
                 }
             }
         } catch (error) {

@@ -1,16 +1,40 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, Alert, FlatList } from "react-native";
 import { StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import { useState, useEffect } from "react";
 import Palette from "../../Constants/Palette";
 import CommentCard from "../../components/comment";
 import { FontAwesome6, FontAwesome } from '@expo/vector-icons';
 import { useLocalSearchParams } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../../supabase";
+import { Session } from "@supabase/supabase-js";
 
-const SubmissionBin = () => {
+interface NewComment{
+    content: string,
+    userid: string,
+    submissionid: string | string[] | undefined
+}
+
+interface Comments{
+    created_at: Date,
+    id: string,
+    content: string,
+    userid: string,
+    submissionid: string
+}
+
+const SubmissionBin = ({session} : {session:Session}) => {
     const params = useLocalSearchParams();
-    const {number, deadline, status} = params;
+    const {number, deadline, status, id} = params;
     const [submissionstatus, setSubmissionStatus] = useState("")
-    const description = "Placeholder description"
+    const description = "Placeholder description";
+    const [comment, setComment] = useState("");
+    const [comments, setComments] = useState<Comments[]>([])
+    const [loading, setLoading] = useState(true)
+    
+    useEffect(()=> {
+        getComments()
+    },[session])
 
     useEffect(() => {
         if(status === "false"){
@@ -18,7 +42,95 @@ const SubmissionBin = () => {
         }else{
             setSubmissionStatus("Done")
         }
-    })
+
+        
+    }, [status])
+
+    async function getComments(){
+        try{
+            if(id !== null || id !== ""){
+
+                console.log("here")
+                const {data, error, status} = await supabase
+                .from('comments')
+                .select()
+                .eq("submissionid", id)
+
+                if(error && status !==406){
+                    throw error;
+                }
+                if(data){
+                    setComments(data)
+                    console.log(comments)
+                }
+            }else{
+                Alert.alert("This submission bin does not exist")
+            }
+        }catch(error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
+        }finally{
+            return
+        }
+    }
+
+    async function addComment() {
+        const user_id = await AsyncStorage.getItem("id");
+        // Define the type for the comment content
+        if(user_id !== null){
+            
+           
+            const newcomment: NewComment = {
+                content: comment, // Replace with the actual content of your comment
+                userid: user_id,
+                submissionid: id
+            };
+            
+            insertComment(newcomment)
+            getComments()
+            
+        }else{
+            Alert.alert("No user logged in")
+        }
+    };
+
+    async function deleteComment(id:string){
+        try{
+            const {data, error} = await supabase
+            .from('comments')
+            .delete()
+            .eq('id', id)
+
+            if(error){
+                throw error;
+            }
+            getComments()
+            Alert.alert("Successfully deleted comment")
+        }catch (error){
+            Alert.alert("Cannot delete this commnent")
+        }
+    }
+
+    const renderComments = ({ item }: { item: Comments }) => <CommentCard comment = {item} deleteComment={deleteComment}/>;
+
+
+    async function insertComment(newcomment: NewComment){
+        try{
+            const {data, error} = await supabase
+            .from('comments')
+            .insert(newcomment)
+
+            if(error){
+                console.log("Error inserting comment");
+                return
+            }
+
+            Alert.alert("Comment added successfully");
+        }catch (error){
+            console.log("Error inserting comment");
+        }
+    }
 
     return (
         <ScrollView>
@@ -40,53 +152,21 @@ const SubmissionBin = () => {
             </View>
             <View style={styles.divider}></View>
             <Text style={styles.title}>COMMENTS</Text>
-            <CommentCard />
-            <CommentCard />
-            <CommentCard />
+            <FlatList 
+                data={comments}
+                renderItem={renderComments}
+                keyExtractor={(item) => item.id}
+            />
             <View style={styles.input}>
                 <FontAwesome6 style={{flex: 1}} name="paperclip" size={24} color="black"/>
                 <FontAwesome6 style={[styles.margin, {flex: 1}]} name="image" size={24} color="black" />
                 {/* insert maxwidth and maxheight */}
-                <TextInput style={[styles.margin, {fontFamily: 'Poppins', flex: 6}]} multiline={true} placeholder="Insert comment here"/>
-                <FontAwesome style={{flex: 1}} name="send" size={24} color="black" />
+                <TextInput onChangeText={setComment} style={[styles.margin, {fontFamily: 'Poppins', flex: 6}]} multiline={true} placeholder="Insert comment here"/>
+                <FontAwesome onPress={addComment} style={{flex: 1}} name="send" size={24} color="black" />
             </View>
 
         </ScrollView>
     )
-    // :
-    // (
-    //     <ScrollView>
-    //         <Text style={styles.title}>SUBMISSION DETAILS</Text>
-    //         <View style={styles.card}>
-    //             <View style={styles.cardheading}>
-    //                 <Text style={styles.cardtitle}>Submission #{number}</Text>
-    //                 <Text style={styles.cardtitle}> {status}</Text>
-    //             </View>
-    //             <View style={styles.cardheading}>
-    //                 <Text style={styles.cardsubtitle}>{date}</Text>
-    //                 <Text style={styles.cardsubtitle}>{time}</Text>
-    //             </View>
-    //             <Text style={styles.description}>{description}</Text>
-    //             <TouchableOpacity style={styles.button}>
-    //                 <Text style={styles.buttontext}>View Video</Text>
-    //             </TouchableOpacity>
-    //         </View>
-    //         <View style={styles.divider}></View>
-    //         <Text style={styles.title}>COMMENTS</Text>
-    //         <CommentCard />
-    //         <CommentCard />
-    //         <CommentCard />
-    //         <View style={styles.input}>
-    //             <FontAwesome6 style={{flex: 1}} name="paperclip" size={24} color="black"/>
-    //             <FontAwesome6 style={[styles.margin, {flex: 1}]} name="image" size={24} color="black" />
-    //             {/* insert maxwidth and maxheight */}
-    //             <TextInput style={[styles.margin, {fontFamily: 'Poppins', flex: 6}]} multiline={true} placeholder="Insert comment here"/>
-    //             <FontAwesome style={{flex: 1}} name="send" size={24} color="black" />
-    //         </View>
-
-    //     </ScrollView>
-    // )
-
 }
 
 const styles = StyleSheet.create({
