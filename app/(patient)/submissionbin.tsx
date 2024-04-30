@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, Alert, FlatList } from "react-native";
-import { StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import { StyleSheet, TouchableOpacity, TextInput, Modal } from "react-native";
 import { useState, useEffect } from "react";
 import Palette from "../../Constants/Palette";
 import CommentCard from "../../components/comment";
@@ -31,7 +31,8 @@ const SubmissionBin = ({session} : {session:Session}) => {
     const [comment, setComment] = useState("");
     const [comments, setComments] = useState<Comments[]>([])
     const [loading, setLoading] = useState(true)
-    
+    // const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+
     useEffect(()=> {
         getComments()
     },[session])
@@ -49,8 +50,6 @@ const SubmissionBin = ({session} : {session:Session}) => {
     async function getComments(){
         try{
             if(id !== null || id !== ""){
-
-                console.log("here")
                 const {data, error, status} = await supabase
                 .from('comments')
                 .select()
@@ -77,12 +76,12 @@ const SubmissionBin = ({session} : {session:Session}) => {
 
     async function addComment() {
         const user_id = await AsyncStorage.getItem("id");
-        // Define the type for the comment content
+  
         if(user_id !== null){
             
            
             const newcomment: NewComment = {
-                content: comment, // Replace with the actual content of your comment
+                content: comment, 
                 userid: user_id,
                 submissionid: id
             };
@@ -112,7 +111,11 @@ const SubmissionBin = ({session} : {session:Session}) => {
         }
     }
 
-    const renderComments = ({ item }: { item: Comments }) => <CommentCard comment = {item} deleteComment={deleteComment}/>;
+    // const toggleDeleteModal = () => {
+    //     setDeleteModalVisible(!deleteModalVisible)
+    // }
+
+    const renderComments = ({ item }: { item: Comments }) => <CommentCard comment = {item} deleteFunction={deleteComment} editFunction={editComment}/>;
 
 
     async function insertComment(newcomment: NewComment){
@@ -127,8 +130,26 @@ const SubmissionBin = ({session} : {session:Session}) => {
             }
 
             Alert.alert("Comment added successfully");
+
         }catch (error){
             console.log("Error inserting comment");
+        }
+    }
+
+    async function editComment(id: string, edited: string){
+        try{
+            const {data, error} = await supabase
+            .from('comments')
+            .update({ content: edited })
+            .eq('id', id)
+
+            if(error){
+                throw error;
+            }
+            getComments()
+            Alert.alert("Successfully edited comment")
+        }catch (error){
+            Alert.alert("Cannot edit this commnent")
         }
     }
 
@@ -164,7 +185,6 @@ const SubmissionBin = ({session} : {session:Session}) => {
                 <TextInput onChangeText={setComment} style={[styles.margin, {fontFamily: 'Poppins', flex: 6}]} multiline={true} placeholder="Insert comment here"/>
                 <FontAwesome onPress={addComment} style={{flex: 1}} name="send" size={24} color="black" />
             </View>
-
         </ScrollView>
     )
 }

@@ -1,9 +1,10 @@
-import { View, Text, Alert, TouchableOpacity } from "react-native";
+import { View, Text, Alert, TouchableOpacity, Modal, TextInput } from "react-native";
 import { StyleSheet } from "react-native";
 import Palette from "../Constants/Palette";
 import { supabase } from "../supabase";
 import { useEffect, useState } from "react";
 import { FontAwesome } from '@expo/vector-icons';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Comments{
     created_at: Date,
@@ -15,21 +16,36 @@ interface Comments{
 
 interface CommentCardProps{
     comment: Comments;
-    deleteComment: (id: string) => void;
+    deleteFunction: (id: string) => void;
+    editFunction: (id:string, edited: string) => void;
 }
 
-const CommentCard: React.FC<CommentCardProps> = ({comment, deleteComment}) => {
+const CommentCard: React.FC<CommentCardProps> = ({comment, deleteFunction, editFunction}) => {
     const [firstname, setFirstname] = useState("");
     const [lastname, setLastname] = useState("");
     const [loading, setLoading] = useState(true);
-
+    const [userid, setUserId] = useState("");
+    const [editModalVisible, setEditModalVisible] = useState(false)
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [editedComment, setEditedComment] = useState("")
     useEffect(()=>  {
         retrieveUserdData()
     })
 
+    const toggleEditModal = () => {
+        setEditModalVisible(!editModalVisible);
+    }
+
+    const toggleDeleteModal = () => {
+        setDeleteModalVisible(!deleteModalVisible);
+    }
+
 
     async function retrieveUserdData(){
         try{
+            const user_id = await AsyncStorage.getItem("id");
+            if(user_id!==null) setUserId(user_id)
+            
             const {data, error, status} = await supabase
             .from('users')
             .select()
@@ -54,6 +70,7 @@ const CommentCard: React.FC<CommentCardProps> = ({comment, deleteComment}) => {
         }
     }
 
+
     return(
         <View style={styles.main}>
             <View style={styles.icon}></View>
@@ -71,16 +88,80 @@ const CommentCard: React.FC<CommentCardProps> = ({comment, deleteComment}) => {
                         <Text style={styles.commenttext}>{comment.content}</Text>
                         
                     </View>
-                    <View style={{flexDirection: 'row'}}>
-                        <TouchableOpacity >
+                    {comment.userid === userid ? (
+                        <View style={{flexDirection: 'row'}}>
+                        <TouchableOpacity onPress={toggleEditModal}>
                             <FontAwesome name="edit" size={24} color="black" style={{marginRight: 5}}/>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={()=>deleteComment(comment.id)}>
+                        <TouchableOpacity onPress={toggleDeleteModal}>
                             <FontAwesome name="trash" size={24} color="black" />
                         </TouchableOpacity>
                     </View>
+                    ): (
+                        <></>
+                    )}
+                    
                 </View>
             </View>
+            
+      <Modal
+        visible={editModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleEditModal}
+      >
+        <View  style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <View style={styles.modalContentContainer}>
+                <Text style={styles.modalTitle}>Edit Comment</Text>
+                <View style={styles.input}>
+                    <TextInput
+                    value={editedComment}
+                    onChangeText={setEditedComment}
+                    placeholder={comment.content}
+                    style={{fontFamily: 'Poppins', color: 'black'}}
+                    multiline={true}
+                    />
+                </View>
+            </View>
+            
+            
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity style={styles.modalButton} onPress={() => {
+                    editFunction(comment.id, editedComment);
+                    setEditModalVisible(!editModalVisible)
+                }}>
+                <Text>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalButton} onPress={toggleEditModal}>
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={deleteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleDeleteModal}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <View style={styles.modalContentContainer}>
+                <Text style={styles.modalTitle}>Are you sure you want to delete this comment?</Text>
+            </View>
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity style={styles.modalButton} onPress={()=> deleteFunction(comment.id)}>
+                <Text>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalButton} onPress={toggleDeleteModal}>
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
         </View>
     )
 }
@@ -117,7 +198,54 @@ const styles = StyleSheet.create({
     content:{
         flex: 5,
         marginLeft: 15
-    }
+    },
+    centeredView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background to overlay the entire screen
+      },
+      modalView: {
+        width: '80%', // Set your desired width
+        height: '20%', // Set your desired height
+        backgroundColor: Palette.lightGray,
+        borderRadius: 20,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+      },
+      modalButtonContainer:{
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignContent: 'space-around',
+      },
+      modalButton:{
+        flex: 1,
+        alignItems: 'center',
+        backgroundColor: Palette.accent,
+        margin: 10,
+        padding: 10,
+        borderRadius: 10
+      },
+      modalTitle: {
+        fontFamily: 'Heading',
+        fontSize: 16
+      },
+      modalContentContainer:{
+        flex: 3
+      },
+      input:{
+        backgroundColor: 'white',
+        margin: 15,
+        padding: 15,
+        borderRadius: 20,
+      }
 })
 
 export default CommentCard;

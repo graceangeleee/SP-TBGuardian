@@ -32,12 +32,12 @@ export default function PatientDashboard({ session }: { session: Session }) {
     const [missing, setMissing] = useState<submissionType[]>([])
 
     useEffect(() => {
-        calcualtePercentage();
-    }, [tosubmit])
-
-    useEffect(() => {
         getDetails();
     }, [session])
+
+    useEffect(() => {
+        calcualtePercentage()
+    }, [tosubmit])
 
     useEffect(() => {
         changeStatus()
@@ -96,6 +96,7 @@ export default function PatientDashboard({ session }: { session: Session }) {
                 }
 
                 if(data){
+                    console.log(data)
                     setMissing(data)
                 }
             }
