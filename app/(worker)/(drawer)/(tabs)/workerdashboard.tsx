@@ -1,61 +1,179 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity} from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import React from 'react';
-import { Redirect } from 'expo-router';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Palette from '../../../../Constants/Palette';
-import { FontAwesome } from '@expo/vector-icons';
-// import { TouchableOpacity } from "react-native-gesture-handler";
 import { Link } from "expo-router";
+import { Session } from '@supabase/supabase-js';
+import { supabase } from '../../../../supabase';
+import { userType, submissionType } from '../../../../Constants/Types';
+import { useWorkerData } from '../../_layout';
 
 
-export default function WorkerDashboard() {
+export default function WorkerDashboard({session}: {session: Session}) {
+    const[loading, setLoading] = useState(false);
+    const {monitoring, done, missing, setMonitoring, setMissing, setDone} = useWorkerData();
+    
+    useEffect(()=> {
+        getDashboardData()
+    }, [session])
 
-const [monitoring, setMonitoring] = useState(20);
-const [done, setDone] = useState(15);
-const [missing, setMissing] = useState(8);
+    async function getDashboardData(){
+        setLoading(true)
+        await Promise.all([getMonitoring(), getDone(), getMissing()]);
+        setLoading(false);
+    }
+
+async function getMonitoring(){
+   setLoading(true)
+    try{
+        const { data, error, status } = await supabase
+        .from('users')
+        .select()
+        .eq("status", "FALSE")
+
+        if(error && status !== 406){
+            throw error;
+        }
+
+        if(data){
+            setMonitoring(data);
+        }
+    }catch (error){
+        if(error instanceof Error){
+            Alert.alert(error.message)
+        }
+    }finally{
+        setLoading(false)
+    }
+}
+
+async function getDone(){
+    setLoading(true)
+    try{
+        const { data, error, status } = await supabase
+        .from('users')
+        .select()
+        .eq("status", "TRUE")
+
+        if(error && status !== 406){
+            throw error;
+        }
+
+        if(data){
+            setDone(data);
+        }
+    }catch (error){
+        if(error instanceof Error){
+            Alert.alert(error.message)
+        }
+    }finally{
+        setLoading(false)
+    }
+}
+
+async function getMissing(){
+    setLoading(true)
+    const date = new Date().toISOString();
+
+    try{
+        const { data, error, status } = await supabase
+        .from('submissions')
+        .select()
+        .eq("status", "FALSE")
+        .lt("deadline", date)
+
+        if(error && status !== 406){
+            throw error;
+        }
+
+        if(data){
+            setMissing(data);
+        }
+    }catch (error){
+        if(error instanceof Error){
+            Alert.alert(error.message)
+        }
+    }finally{
+        setLoading(false)
+    }
+}
 
 
   return (
-    <ScrollView>
-        <TouchableOpacity style={[styles.horizontalcontainer,{backgroundColor: Palette.focused, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
-            {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
-                <View style={{backgroundColor: Palette.focused, flex: 1, alignItems: 'center'}}>
-                    <View style={{backgroundColor: Palette.focused, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center'}}>
-                        <Text style={styles.count}>{monitoring}</Text>
-                    </View>
-                </View>
-                <Text style={[{flex: 2}, styles.workerdashboard]}>MONITORING</Text>
-            {/* </View> */}
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.horizontalcontainer,{backgroundColor: Palette.shadowAccent, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
-            {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
-                <View style={{backgroundColor: Palette.shadowAccent, flex: 1, alignItems: 'center'}}>
-                    <View style={{backgroundColor: Palette.shadowAccent, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center'}}>
-                        <Text style={styles.count}>{missing}</Text>
-                    </View>
-                </View>
-                <Text style={[{flex: 2}, styles.workerdashboard]}>MISSING</Text>
-            {/* </View> */}
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.horizontalcontainer,{backgroundColor: Palette.background, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
-            {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
-                <View style={{backgroundColor: Palette.background, flex: 1, alignItems: 'center'}}>
-                    <View style={{backgroundColor: Palette.background, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center'}}>
-                        <Text style={styles.count}>{done}</Text>
-                    </View>
-                </View>
-                <Text style={[{flex: 2}, styles.workerdashboard]}>DONE</Text>
-            {/* </View> */}
-        </TouchableOpacity>
-        <Link href="/addpatient" asChild>
-            <TouchableOpacity>
-                <View style={styles.addpatient}>
-                    <Text style={{textAlign: 'center', fontFamily: 'Poppins', alignSelf: 'center', fontSize: 16}}>Add Patient</Text>
-                </View>
-            </TouchableOpacity>
-        </Link>
-    </ScrollView>
+    <View>
+        {loading ? 
+        (
+                <></>
+        ):
+        (
+            <ScrollView>
+                <Link href={{pathname: "/patientcardlist", params: {patientlist: monitoring, type: "Monitoring"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.focused, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
+                    <TouchableOpacity >
+                    {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
+                        <View style={{backgroundColor: Palette.focused, flex: 1, alignItems: 'center'}}>
+                            <View style={{backgroundColor: Palette.focused, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center'}}>
+                               {monitoring !== null ? (
+                                <Text style={styles.count}>{monitoring.length}</Text>
+                               ):
+                               (
+                                <></>
+                               )}
+                                
+                            </View>
+                        </View>
+                        <Text style={[{flex: 2}, styles.workerdashboard]}>MONITORING</Text>
+                    {/* </View> */}
+                    </TouchableOpacity>
+                </Link>
+                <Link href={{pathname: "/missinglist"}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.shadowAccent, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
+                    <TouchableOpacity >
+                        {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
+                            <View style={{backgroundColor: Palette.shadowAccent, flex: 1, alignItems: 'center'}}>
+                                <View style={{backgroundColor: Palette.shadowAccent, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center'}}>
+                                    {missing!==null? (
+                                        <Text style={styles.count}>{missing.length}</Text>
+                                    ):(
+                                        <></>
+                                    )}
+                                    
+                                </View>
+                            </View>
+                            <Text style={[{flex: 2}, styles.workerdashboard]}>MISSING</Text>
+                        {/* </View> */}
+                    </TouchableOpacity>
+                </Link>
+                <Link href={{pathname: "/patientcardlist", params: {patientlist: done, type: "Done"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.background, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
+                <TouchableOpacity >
+                    {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
+                        <View style={{backgroundColor: Palette.background, flex: 1, alignItems: 'center'}}>
+                            <View style={{backgroundColor: Palette.background, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center'}}>
+                                {done !== null ? (
+                                    <Text style={styles.count}>{done.length}</Text>
+                                ):
+                                (
+                                    <></>
+                                )}
+                                
+                            </View>
+                        </View>
+                        <Text style={[{flex: 2}, styles.workerdashboard]}>DONE</Text>
+                    {/* </View> */}
+                </TouchableOpacity>
+                </Link>
+                <Link href="/addpatient" asChild>
+                    <TouchableOpacity>
+                        <View style={styles.addpatient}>
+                            <Text style={{textAlign: 'center', fontFamily: 'Poppins', alignSelf: 'center', fontSize: 16}}>Add Patient</Text>
+                        </View>
+                    </TouchableOpacity>
+                </Link>
+            </ScrollView>
+        )
+   
+    }
+    </View>
+
   )
 }
 

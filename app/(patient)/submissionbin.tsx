@@ -8,6 +8,7 @@ import { useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../supabase";
 import { Session } from "@supabase/supabase-js";
+import { commentType } from "../../Constants/Types";
 
 interface NewComment{
     content: string,
@@ -15,13 +16,6 @@ interface NewComment{
     submissionid: string | string[] | undefined
 }
 
-interface Comments{
-    created_at: Date,
-    id: string,
-    content: string,
-    userid: string,
-    submissionid: string
-}
 
 const SubmissionBin = ({session} : {session:Session}) => {
     const params = useLocalSearchParams();
@@ -29,7 +23,7 @@ const SubmissionBin = ({session} : {session:Session}) => {
     const [submissionstatus, setSubmissionStatus] = useState("")
     const description = "Placeholder description";
     const [comment, setComment] = useState("");
-    const [comments, setComments] = useState<Comments[]>([])
+    const [comments, setComments] = useState<commentType[]>([])
     const [loading, setLoading] = useState(true)
     // const [deleteModalVisible, setDeleteModalVisible] = useState(false)
 
@@ -115,7 +109,7 @@ const SubmissionBin = ({session} : {session:Session}) => {
     //     setDeleteModalVisible(!deleteModalVisible)
     // }
 
-    const renderComments = ({ item }: { item: Comments }) => <CommentCard comment = {item} deleteFunction={deleteComment} editFunction={editComment}/>;
+    const renderComments = ({ item }: { item: commentType }) => <CommentCard comment = {item} deleteFunction={deleteComment} editFunction={editComment}/>;
 
 
     async function insertComment(newcomment: NewComment){
