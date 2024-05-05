@@ -8,18 +8,10 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Link } from "expo-router";
 import { Session } from "@supabase/supabase-js";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import { supabase } from '../../../../supabase';
+import { submissionType } from '../../../../Constants/Types';
 
 
-interface submissionType{
-    created_at: Date,
-    deadline: Date,
-    id: string,
-    patientid: string,
-    status: boolean,
-    number: number
-}
 
 
 export default function PatientDashboard({ session }: { session: Session }) {

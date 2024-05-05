@@ -14,8 +14,6 @@ AppState.addEventListener('change', (state) => {
 })
 
   const WorkerLogin = () => {
-    // console.log(user_type) //patient or worker
-    console.log("Worker")
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
