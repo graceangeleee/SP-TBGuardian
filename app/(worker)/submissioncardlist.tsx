@@ -8,7 +8,7 @@ import { supabase } from "../../supabase";
 const SubmissionCardList = () => {
     const params = useLocalSearchParams()
     const [submissions, setSubmissions] = useState<submissionType[] | null>(null);
-    const renderList = ({item}: {item: submissionType}) => <SubmissionCard content = {item} type=""/> 
+    const renderList = ({item}: {item: submissionType}) => <SubmissionCard content = {item} type="" smsAvailable={false}/> 
     const [loading, setLoading] = useState(false)
 
     useEffect(()=> {

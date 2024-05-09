@@ -5,7 +5,7 @@ import Palette from "../../Constants/Palette";
 import CommentCard from "../../components/comment";
 import { FontAwesome6, FontAwesome } from '@expo/vector-icons';
 import { useLocalSearchParams } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from 'expo-secure-store';
 import { supabase } from "../../supabase";
 import { Session } from "@supabase/supabase-js";
 import { commentType } from "../../Constants/Types";
@@ -29,14 +29,14 @@ const SubmissionBin = ({session} : {session:Session}) => {
 
     useEffect(()=> {
         getComments()
-    },[session])
+    },[comment])
 
     useEffect(() => {
-        if(status === "false"){
-            setSubmissionStatus("Ongoing")
-        }else{
-            setSubmissionStatus("Done")
-        }
+    if(status === "false"){
+        setSubmissionStatus("Ongoing")
+    }else{
+        setSubmissionStatus("Done")
+    }
 
         
     }, [status])
@@ -69,7 +69,7 @@ const SubmissionBin = ({session} : {session:Session}) => {
     }
 
     async function addComment() {
-        const user_id = await AsyncStorage.getItem("id");
+        const user_id = await SecureStore.getItemAsync("id");
   
         if(user_id !== null){
             

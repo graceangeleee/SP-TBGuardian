@@ -3,7 +3,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Stack } from 'expo-router';
 import { userType, submissionType } from '../../Constants/Types';
 import Palette from '../../Constants/Palette';
-import {NavigationContainer} from 'expo-router'
+
 
 interface WorkerDataContext {
   monitoring: userType[] | null;
@@ -12,6 +12,13 @@ interface WorkerDataContext {
   setDone: React.Dispatch<React.SetStateAction<userType[] | null>>;
   missing: submissionType[] | null;
   setMissing: React.Dispatch<React.SetStateAction<submissionType[] | null>>;
+  unverified: submissionType[] | null;
+  setUnverified: React.Dispatch<React.SetStateAction<submissionType[] | null>>;
+  userid: string;
+  setUserID: React.Dispatch<React.SetStateAction<string>>;
+  user: userType | null;
+  setUser: React.Dispatch<React.SetStateAction<userType | null>>;
+
 }
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
@@ -40,9 +47,13 @@ export const WorkerDataProvider: React.FC<WorkerDataProviderProps> = ({ children
   const [monitoring, setMonitoring] = useState<userType[] | null>(null);
   const [done, setDone] = useState<userType[] | null>(null);
   const [missing, setMissing] = useState<submissionType[] | null>(null);
+  const [unverified, setUnverified] = useState<submissionType[] | null>(null);
+  const [user, setUser] = useState<userType | null>(null);
+  const [userid, setUserID] = useState("");
+
 
   return (
-    <WorkerDataContext.Provider value={{ monitoring, setMonitoring, done, setDone, missing, setMissing }}>
+    <WorkerDataContext.Provider value={{ monitoring, setMonitoring, done, setDone, missing, setMissing, unverified, setUnverified, user, setUser, userid, setUserID }}>
       {children}
     </WorkerDataContext.Provider>
   );
@@ -58,6 +69,9 @@ export default function Layout() {
         <Stack.Screen name="patientcardlist" options={{ headerTitle: "Patient List", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
         <Stack.Screen name="missinglist" options={{ headerTitle: "Missing Submissions", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
         <Stack.Screen name="submissioncardlist" options={{ headerTitle: "Submissions List", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="unverified" options={{ headerTitle: "Unverified Submissions", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="workerschedule" options={{ headerTitle: "Schedule", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="setschedule" options={{presentation: 'modal', headerTitle: "Set a Schedule", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
         {/* <Stack.Screen name="submissionbin" options={{ presentation: 'modal' }} /> */}
       </Stack>
     </WorkerDataProvider>

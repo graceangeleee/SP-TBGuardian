@@ -7,9 +7,11 @@ import { FontAwesome } from '@expo/vector-icons';
 // import { TouchableOpacity } from "react-native-gesture-handler";
 import { Link } from "expo-router";
 import { Session } from "@supabase/supabase-js";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../../../../supabase';
 import { submissionType } from '../../../../Constants/Types';
+import { useUserData } from '../../_layout';
+import * as SecureStore from 'expo-secure-store';
+
 
 
 
@@ -22,6 +24,7 @@ export default function PatientDashboard({ session }: { session: Session }) {
     const [status, setStatus] = useState("");
     const [pending, setPending] = useState<submissionType[]>([])
     const [missing, setMissing] = useState<submissionType[]>([])
+    const {setUser} = useUserData();
 
     useEffect(() => {
         getDetails();
@@ -53,11 +56,12 @@ export default function PatientDashboard({ session }: { session: Session }) {
     async function getDetails(){
         setLoading(true);
         try{
-            const id = await AsyncStorage.getItem("id");
+            const id = await SecureStore.getItemAsync("id");
             if(id != null){
                 getPendingDetails(id)
                 getUserData(id)
                 getMissing(id)
+                getUser(id)
             }else{
                 console.log("No session")
             }
@@ -88,7 +92,6 @@ export default function PatientDashboard({ session }: { session: Session }) {
                 }
 
                 if(data){
-                    console.log(data)
                     setMissing(data)
                 }
             }
@@ -100,6 +103,32 @@ export default function PatientDashboard({ session }: { session: Session }) {
             return
         }
     }
+
+    const getUser = async (id: string) => {
+        try{
+
+            if (id === null || id === "") {
+                throw new Error('No user logged in');
+            } else {
+                const { data, error, status } = await supabase
+                    .from('users')
+                    .select()
+                    .eq('id', id)
+                    .single();
+                
+                if(data){
+                   setUser(data)
+                }
+            }
+        }catch (error) {
+            if (error instanceof Error) {
+                Alert.alert(error.message);
+            }
+        } finally {
+            return
+        }
+    }
+
 
     async function getPendingDetails(userid: string){
         const date = new Date().toISOString();
@@ -162,7 +191,6 @@ export default function PatientDashboard({ session }: { session: Session }) {
         changeStatus();
     }
 
-
     return (
         loading ? (
             <></>
@@ -212,6 +240,11 @@ export default function PatientDashboard({ session }: { session: Session }) {
                         </View>
     
                         <Text style={styles.details}>Placeholder Date</Text>
+                        <Link href={{pathname: "/schedule"}} asChild style={styles.button}>
+                                <TouchableOpacity>
+                                    <Text style={styles.buttontext}>Submit</Text>
+                                </TouchableOpacity>
+                            </Link>
                     </View>
     
                 </View>

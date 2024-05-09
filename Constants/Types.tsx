@@ -33,3 +33,14 @@ export interface commentType{
     submissionid: string
 
 }
+
+export interface agendaType{
+    id: string,
+    created_at: Date,
+    text: string,
+    date: Date,
+    time: string,
+    patientid: string,
+    workerid: string,
+    confirmed: boolean
+}

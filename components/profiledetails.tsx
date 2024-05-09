@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native";
 
 interface ProfileDetailsProps {
     title: string;
-    detail: string | number ;
+    detail: string | number | undefined ;
 }
 
 const ProfileDetails: React.FC<ProfileDetailsProps> = (props) => {
@@ -13,6 +13,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = (props) => {
     return(
         <View style={styles.container}>
             <Text style={styles.title}>{title}</Text>
+            
             <Text style={styles.detail}>{detail}</Text>
         </View>
     )

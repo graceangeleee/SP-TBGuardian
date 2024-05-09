@@ -19,7 +19,7 @@ export default function Landing() {
 
     
     <View style={styles.main}>
-         <View style={[styles.card, {height: height*0.55}]}>
+         <View style={[styles.card, {flex: 3.5}]}>
          {/* <Image source={require('C:\Users\grace\Desktop\TBGuardian\TBGuardian\assets\images\placeholder_icon.png.png')} /> */}
             <Text style={[styles.appname, {paddingTop: height*0.4}]}>TBGuardian</Text>
         </View>
@@ -89,13 +89,14 @@ const styles = StyleSheet.create({
       color: 'white'
     },
     buttonContainer:{
-      marginTop: 30
+      marginTop: 30,
+      flex: 2
     },
     chooseText:{
       fontSize: 30,
       fontFamily: 'Heading',
       alignSelf: 'center',
-      marginTop: 30
+      marginTop: 30,
     },
     footer:{
       backgroundColor: '#219EBC',

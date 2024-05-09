@@ -3,13 +3,15 @@ import React, { useState, useEffect} from "react";
 import { submissionType, userType } from "../Constants/Types";
 import Palette from "../Constants/Palette";
 import { supabase } from "../supabase";
+import * as SMS from 'expo-sms';
 
 interface SubmissionCardProps{
     content: submissionType
     type: string
+    smsAvailable?: boolean
 }
 
-const SubmissionCard: React.FC<SubmissionCardProps> = ({content, type}) => {
+const SubmissionCard: React.FC<SubmissionCardProps> = ({content, type, smsAvailable}) => {
     const [user, setUser] = useState<userType>();
     const [loading, setLoading] = useState(false);
 
@@ -41,6 +43,17 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({content, type}) => {
             setLoading(false)
         }
     }
+
+    const sendSMS = async (cnumber: string, deadline: Date) =>{ 
+        const deadline_string = deadline.toString()
+        if(smsAvailable){
+            const {result} = await SMS.sendSMSAsync(cnumber, "MISSING: You have missed a dose in your TB DOTS program last "+ deadline_string + ". Kindly check you TBGuardian app for notifications. This is also a reminder to refrain from skipping your daily dose.")
+            if(result === "sent") Alert.alert("Sent successfully")
+        }else{
+            Alert.alert("Messaging not available in this device")
+        }
+        
+    }
     
     return (
     <>
@@ -56,9 +69,14 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({content, type}) => {
                 ):(
                     <></>
                 )}
-                <TouchableOpacity style={styles.button}>
+                {user?.contact_number !== undefined ?(
+                    <TouchableOpacity onPress={()=> sendSMS(user?.contact_number, content.deadline)} style={styles.button}>
                     <Text style={styles.buttontext}>Send SMS</Text>
                 </TouchableOpacity>
+                ):(
+                    <></>
+                )}
+                
             </View>
         ) : (
             <View style={styles.container}>

@@ -4,7 +4,7 @@ import Palette from "../Constants/Palette";
 import { supabase } from "../supabase";
 import { useEffect, useState } from "react";
 import { FontAwesome } from '@expo/vector-icons';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from 'expo-secure-store';
 
 interface Comments{
     created_at: Date,
@@ -43,7 +43,7 @@ const CommentCard: React.FC<CommentCardProps> = ({comment, deleteFunction, editF
 
     async function retrieveUserdData(){
         try{
-            const user_id = await AsyncStorage.getItem("id");
+            const user_id = await SecureStore.getItemAsync("id");
             if(user_id!==null) setUserId(user_id)
             
             const {data, error, status} = await supabase
