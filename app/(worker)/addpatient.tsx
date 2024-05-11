@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react";
-import {Picker} from '@react-native-picker/picker';
-import DatePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { supabase } from "../../supabase";
 import { Text, TextInput, SafeAreaView, Button, Alert, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import React from "react";
+import DateTimePicker from "@react-native-community/datetimepicker";
+
+
 
 const AddPatient = () => {
     const [firstname, setFirstname] = useState("");
@@ -73,7 +74,7 @@ const AddPatient = () => {
         }
       };
 
-      const birthdayHandler = (event: DateTimePickerEvent, selectedDate? : Date) => {
+      const birthdayHandler = (event: any, selectedDate? : Date) => {
         const currentDate = selectedDate || birthday;
         setShowDatePicker(false);
         setBirthday(currentDate);
@@ -123,17 +124,17 @@ const AddPatient = () => {
                 keyboardType="numeric"
                 />
                 {heightError ? <Text style={styles.errorText}>{heightError}</Text> : null}
-                <Picker
+                {/* <Picker
                     selectedValue={gender}
                     style={{ height: 50, width: 200 }}
-                    onValueChange={(itemValue, itemIndex) => setGender(itemValue)}
+                    onValueChange={(itemValue:string, itemIndex) => setGender(itemValue)}
                 >
                     <Picker.Item label="Male" value="Male"/>
                     <Picker.Item label="Female" value="Female"/>
-                </Picker>
+                </Picker> */}
                 <Button title="Show Date Picker" onPress={() => setShowDatePicker(true)} />
                 {showDatePicker && (
-                    <DatePicker
+                    <DateTimePicker
                     value={birthday}
                     mode="date"
                     display="default"

@@ -6,13 +6,15 @@ import Palette from '../../../../Constants/Palette';
 import { Link } from "expo-router";
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../../../../supabase';
-import { userType, submissionType } from '../../../../Constants/Types';
 import { useWorkerData } from '../../_layout';
+import { FontAwesome } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
+
 
 
 export default function WorkerDashboard({session}: {session: Session}) {
     const[loading, setLoading] = useState(false);
-    const {monitoring, done, missing, setMonitoring, setMissing, setDone} = useWorkerData();
+    const {monitoring, done, missing, setMonitoring, setMissing, setDone, unverified, setUnverified, userid, user, setUser} = useWorkerData();
     
     useEffect(()=> {
         getDashboardData()
@@ -20,7 +22,7 @@ export default function WorkerDashboard({session}: {session: Session}) {
 
     async function getDashboardData(){
         setLoading(true)
-        await Promise.all([getMonitoring(), getDone(), getMissing()]);
+        await Promise.all([getMonitoring(), getDone(), getMissing(), getUnverified(), getUser()]);
         setLoading(false);
     }
 
@@ -99,6 +101,58 @@ async function getMissing(){
     }
 }
 
+async function getUnverified(){
+    setLoading(true)
+    const date = new Date().toISOString();
+
+    try{
+        const { data, error, status } = await supabase
+        .from('submissions')
+        .select()
+        .eq("status", "TRUE")
+        .eq("verified", "FALSE")
+
+        if(error && status !== 406){
+            throw error;
+        }
+
+        if(data){
+            setUnverified(data)
+        }
+    }catch (error){
+        if(error instanceof Error){
+            Alert.alert(error.message)
+        }
+    }finally{
+        setLoading(false)
+    }
+}
+
+const getUser = async () => {
+    const userid = await SecureStore.getItem("id")
+    try{
+        if (userid === null || userid === "") {
+            throw new Error('No user logged in');
+        } else {
+            const { data, error, status } = await supabase
+                .from('users')
+                .select()
+                .eq('id', userid)
+                .single();
+            
+            if(data){
+                setUser(data)
+            }
+        }
+    }catch (error) {
+        if (error instanceof Error) {
+            Alert.alert(error.message);
+        }
+    } finally {
+        return
+    }
+}
+
 
   return (
     <View>
@@ -108,11 +162,59 @@ async function getMissing(){
         ):
         (
             <ScrollView>
-                <Link href={{pathname: "/patientcardlist", params: {patientlist: monitoring, type: "Monitoring"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.focused, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
+                <View style={{padding: 15, flexDirection: 'row'}}>
+                    <Text style={{flex: 4, fontFamily: 'Heading', fontSize: 20, alignSelf: 'center'}}>
+                        Register a new patient?
+                    </Text>
+                    <Link href="/addpatient" asChild style={{flex: 1, justifyContent: 'center'}}>
+                        <TouchableOpacity style={{alignContent: 'center', alignItems: 'center', justifyContent: 'center'}}>
+                            <View style={styles.addpatient}>
+                                <Text style={{textAlign: 'center', fontFamily: 'Heading', fontSize: 16, color: 'white'}}>Add Patient</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </Link>
+                </View>
+
+ 
+                <View style={{flexDirection: 'row', alignContent: 'space-between', marginTop: -10, marginBottom: -10}}>
+                    <View style={[styles.card, {backgroundColor: Palette.buttonOrLines}]}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <FontAwesome style={{flex: 1}} name="tasks" size={24} color="white" />
+                            <Text style={styles.cardtitle}>Unverified Submissions</Text>
+                            
+                                
+                        </View>
+                        <Text style={styles.cardcontent}>
+                                    There are {unverified?.length} unverified submssions
+                        </Text>
+                        <View style={[{backgroundColor: Palette.accent}, styles.button]}>
+                            <Link href={{pathname: "/unverified"}} style={{alignSelf: 'center'}}>
+                                {/* <TouchableOpacity> */}
+                                    <Text style={styles.buttontext}>See submissions</Text>
+                                {/* </TouchableOpacity> */}
+                            </Link>
+                        </View>
+                      
+                    </View>
+                    <View style={[styles.card, {backgroundColor: Palette.accent}]}>
+                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                            <FontAwesome style={{flex: 1}} name="calendar" size={24} color="white" />
+                            <Text style={styles.cardtitle}>Calendar</Text>
+                        </View>
+                        <View style={[{backgroundColor: Palette.buttonOrLines}, styles.button]}>
+                            <Link href={{pathname: "/workerschedule"}} style={{alignSelf: 'center'}}>
+                                {/* <TouchableOpacity> */}
+                                    <Text style={styles.buttontext}>See schedule</Text>
+                                {/* </TouchableOpacity> */}
+                            </Link>
+                        </View>
+                    </View>
+                </View>
+                <Link href={{pathname: "/patientcardlist",  params: {type: "Monitoring"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.focused, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
                     <TouchableOpacity >
                     {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
                         <View style={{backgroundColor: Palette.focused, flex: 1, alignItems: 'center'}}>
-                            <View style={{backgroundColor: Palette.focused, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center'}}>
+                            <View style={{backgroundColor: Palette.focused, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center', justifyContent: 'center'}}>
                                {monitoring !== null ? (
                                 <Text style={styles.count}>{monitoring.length}</Text>
                                ):
@@ -126,11 +228,11 @@ async function getMissing(){
                     {/* </View> */}
                     </TouchableOpacity>
                 </Link>
-                <Link href={{pathname: "/missinglist"}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.shadowAccent, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
+                <Link href={{pathname: "/missinglist",  params: {type: "Missing"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.shadowAccent, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
                     <TouchableOpacity >
                         {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
-                            <View style={{backgroundColor: Palette.shadowAccent, flex: 1, alignItems: 'center'}}>
-                                <View style={{backgroundColor: Palette.shadowAccent, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center'}}>
+                            <View style={{backgroundColor: Palette.shadowAccent, flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+                                <View style={{backgroundColor: Palette.shadowAccent, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center', justifyContent: 'center'}}>
                                     {missing!==null? (
                                         <Text style={styles.count}>{missing.length}</Text>
                                     ):(
@@ -143,11 +245,11 @@ async function getMissing(){
                         {/* </View> */}
                     </TouchableOpacity>
                 </Link>
-                <Link href={{pathname: "/patientcardlist", params: {patientlist: done, type: "Done"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.background, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
+                <Link href={{pathname: "/patientcardlist", params: {type: "Done"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.background, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
                 <TouchableOpacity >
                     {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
                         <View style={{backgroundColor: Palette.background, flex: 1, alignItems: 'center'}}>
-                            <View style={{backgroundColor: Palette.background, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center'}}>
+                            <View style={{backgroundColor: Palette.background, borderColor: 'white', borderRadius: 90, borderWidth: 5, width: 90, height: 90, alignItems: 'center', justifyContent: 'center'}}>
                                 {done !== null ? (
                                     <Text style={styles.count}>{done.length}</Text>
                                 ):
@@ -161,13 +263,7 @@ async function getMissing(){
                     {/* </View> */}
                 </TouchableOpacity>
                 </Link>
-                <Link href="/addpatient" asChild>
-                    <TouchableOpacity>
-                        <View style={styles.addpatient}>
-                            <Text style={{textAlign: 'center', fontFamily: 'Poppins', alignSelf: 'center', fontSize: 16}}>Add Patient</Text>
-                        </View>
-                    </TouchableOpacity>
-                </Link>
+                
             </ScrollView>
         )
    
@@ -273,16 +369,17 @@ const styles = StyleSheet.create({
     },
     button:{
         padding: 10,
-        borderRadius: 60,
-        backgroundColor: Palette.buttonOrLines,
+        borderRadius: 20,
+        // backgroundColor: Palette.buttonOrLines,
         borderColor: 'white',
-        borderWidth: 1
+        borderWidth: 1,
+        textAlign: 'center'
     },
     buttontext:{
-        // fontFamily: 'Poppins',
+        fontFamily: 'Poppins',
         fontSize: 16,
-        alignSelf: 'center',
-        color: 'white'
+        color: 'white',
+        justifyContent: 'center'
     },
     workerdashboard:{
         // fontFamily: 'Heading',
@@ -296,12 +393,34 @@ const styles = StyleSheet.create({
     },
     addpatient:{
         alignSelf: 'flex-end',
-        position: 'absolute',
-        height: 80,
-        width: 80,
+        height: 90,
+        width: 90,
         backgroundColor: Palette.buttonOrLines,
         borderRadius: 90,
-        alignItems: 'center',
-        alignContent: 'center'
-    }
+        justifyContent: 'center'
+
+    },
+    card:{
+        borderRadius: 20,
+        flex: 1,
+        margin: 10,
+        height: 230,
+        borderColor: Palette.background,
+        borderWidth: 2,
+        padding: 15
+    },
+    cardtitle:{
+        fontFamily: 'Heading',
+        color: 'white',
+        fontSize: 20,
+        flex: 4,
+        // textDecorationLine: 'underline'
+    },
+    cardcontent:{
+        fontFamily: 'Poppins',
+        fontSize: 16,
+        color: 'white',
+        marginTop: 10
+    },
+  
 });

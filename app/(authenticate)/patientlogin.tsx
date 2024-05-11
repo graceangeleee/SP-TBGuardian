@@ -1,9 +1,9 @@
-import { StyleSheet, TextInput, Button, Pressable, View, Text, Alert, AppState} from 'react-native';
+import { StyleSheet, TextInput, Button, Pressable, View, Text, Alert, AppState, SafeAreaView} from 'react-native';
 import { useState, useEffect } from 'react';
 import Palette from '../../Constants/Palette';
 import { router } from 'expo-router';
 import { supabase } from '../../supabase';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 
 AppState.addEventListener('change', (state) => {
@@ -20,6 +20,7 @@ AppState.addEventListener('change', (state) => {
     const [nameFocus, setNameFocus] = useState(false);
     const [passFocus, setPassFocus] = useState(false);
     const [loading, setLoading] = useState(false);
+    
 
 
     // useEffect(() => {
@@ -46,7 +47,8 @@ AppState.addEventListener('change', (state) => {
             if(data && data.session?.user.id){
                 // console.log(data)
                 // console.log("Logged in");
-                AsyncStorage.setItem("id", data.session.user.id)
+                // await setUserID(data.session.user.id)
+                await SecureStore.setItem("id", data.session.user.id)
                 router.replace("/(patient)");
             }else{
                 Alert.alert("Please enter correct email and password")
