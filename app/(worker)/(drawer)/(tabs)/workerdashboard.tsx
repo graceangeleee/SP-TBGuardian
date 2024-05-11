@@ -27,28 +27,29 @@ export default function WorkerDashboard({session}: {session: Session}) {
     }
 
 async function getMonitoring(){
-   setLoading(true)
-    try{
-        const { data, error, status } = await supabase
-        .from('users')
-        .select()
-        .eq("status", "FALSE")
-
-        if(error && status !== 406){
-            throw error;
-        }
-
-        if(data){
-            setMonitoring(data);
-        }
-    }catch (error){
-        if(error instanceof Error){
-            Alert.alert(error.message)
-        }
-    }finally{
-        setLoading(false)
-    }
-}
+    setLoading(true)
+     try{
+         const { data, error, status } = await supabase
+         .from('users')
+         .select()
+         .eq("status", "TRUE")
+         .eq("confirmed", "FALSE")
+ 
+         if(error && status !== 406){
+             throw error;
+         }
+ 
+         if(data){
+             setUnverified(data);
+         }
+     }catch (error){
+         if(error instanceof Error){
+             Alert.alert(error.message)
+         }
+     }finally{
+         setLoading(false)
+     }
+ }
 
 async function getDone(){
     setLoading(true)

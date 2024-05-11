@@ -22,7 +22,8 @@ export interface submissionType{
     patientid: string,
     status: boolean,
     number: number,
-    verified: boolean
+    verified: boolean,
+    videopath: string
 }
 
 export interface commentType{

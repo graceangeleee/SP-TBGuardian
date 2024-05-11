@@ -4,6 +4,7 @@ import { submissionType, userType } from "../Constants/Types";
 import Palette from "../Constants/Palette";
 import { supabase } from "../supabase";
 import * as SMS from 'expo-sms';
+import { Link } from "expo-router";
 
 interface SubmissionCardProps{
     content: submissionType
@@ -71,14 +72,36 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({content, type, smsAvaila
                 )}
                 {user?.contact_number !== undefined ?(
                     <TouchableOpacity onPress={()=> sendSMS(user?.contact_number, content.deadline)} style={styles.button}>
-                    <Text style={styles.buttontext}>Send SMS</Text>
-                </TouchableOpacity>
+                        <Text style={styles.buttontext}>Send SMS</Text>
+                    </TouchableOpacity>
                 ):(
                     <></>
                 )}
                 
             </View>
-        ) : (
+        ) : !loading && type==="Unverified"? (
+            <TouchableOpacity style={styles.container}>
+                {user !== undefined ? (
+                    <>
+                    <Text style={styles.name}>{user.firstname} {user.lastname}</Text>
+                    <Text style={styles.details}>{user.address}</Text>
+                    <Text style={styles.details}>{user.contact_number}   |   {user.email}</Text>
+                    <Text style={styles.details}>Deadline: {content.deadline.toString()}</Text>
+                    </>
+                ):(
+                    <></>
+                )}
+               
+                <Link href={{pathname:"/submissionpreview", params: {id: content.id}}}>
+                    <TouchableOpacity style={styles.button}>
+                        <Text style={styles.buttontext}>View Submission Bin</Text>
+                    </TouchableOpacity>
+                </Link>
+              
+            </TouchableOpacity>
+        ):
+        (
+            
             <View style={styles.container}>
                 {user !== undefined ? (
                     <>

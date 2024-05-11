@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useState, useEffect } from "react";
 import Palette from '../../../../Constants/Palette';
@@ -15,7 +15,7 @@ export default function PatientDashboard({ session }: { session: Session }) {
     const [percentage, setPercentage] = useState(0);
     const [tosubmit, setToSubmit] = useState(0);
     const [rewards, setRewards] = useState(23);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [status, setStatus] = useState("");
     const [missing, setMissing] = useState<submissionType[]>([])
     const [pendingstatus, setPendingStatus] = useState("")
@@ -70,6 +70,7 @@ export default function PatientDashboard({ session }: { session: Session }) {
     }
 
     async function getMissing(userid: string) {
+        setLoading(true)
         const date = new Date().toISOString();
 
         try {
@@ -97,11 +98,12 @@ export default function PatientDashboard({ session }: { session: Session }) {
                 Alert.alert(error.message)
             }
         } finally {
-            return
+            setLoading(false)
         }
     }
 
     async function getPendingDetails(userid: string) {
+        setLoading(true)
         const date = new Date().toISOString();
         try {
             if (userid === null || userid === "") {
@@ -110,7 +112,7 @@ export default function PatientDashboard({ session }: { session: Session }) {
                 const { data, error, status } = await supabase
                     .from('submissions')
                     .select()
-                    .eq("patientid", userid)
+                    .eq("patientid", userid) 
                     .gte("deadline", date)
 
 
@@ -128,11 +130,12 @@ export default function PatientDashboard({ session }: { session: Session }) {
                 Alert.alert(error.message)
             }
         } finally {
-            return
+            setLoading(false)
         }
     }
 
     async function getUserData(userid: string) {
+        setLoading(true)
         try {
             if (userid === null || userid === "") {
                 throw new Error('No user logged in');
@@ -153,20 +156,25 @@ export default function PatientDashboard({ session }: { session: Session }) {
                 Alert.alert(error.message);
             }
         } finally {
-            return
+            setLoading(false)
         }
     }
 
     const calcualtePercentage = () => {
         const percent = ((60 - tosubmit) / 60) * 100
-        setPercentage(percent)
+        setPercentage(Math.round(percent * 100) / 100)
         changeStatus();
     }
 
     return (
         <>
             <StatusBar style="auto" />
-            {pending === undefined ? (
+            {loading? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#0000ff" />
+              </View>
+            ):
+            pending === undefined ? (
                 <></>
             ) : (
                 <ScrollView>

@@ -71,6 +71,8 @@ export default function Layout() {
         <Stack.Screen name="submissioncardlist" options={{ headerTitle: "Submissions List", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
         <Stack.Screen name="unverified" options={{ headerTitle: "Unverified Submissions", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
         <Stack.Screen name="workerschedule" options={{ headerTitle: "Schedule", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="submissionpreview" options={{ headerTitle: "Submission Bin", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="videoviewer" options={{ headerTitle: "Playing Video", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
         <Stack.Screen name="setschedule" options={{presentation: 'modal', headerTitle: "Set a Schedule", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
         {/* <Stack.Screen name="submissionbin" options={{ presentation: 'modal' }} /> */}
       </Stack>
