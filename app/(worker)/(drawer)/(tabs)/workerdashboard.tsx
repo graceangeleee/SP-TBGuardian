@@ -210,7 +210,7 @@ const getUser = async () => {
                         </View>
                     </View>
                 </View>
-                <Link href={{pathname: "/patientcardlist", params: {patientlist: monitoring, type: "Monitoring"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.focused, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
+                <Link href={{pathname: "/patientcardlist",  params: {type: "Monitoring"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.focused, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
                     <TouchableOpacity >
                     {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
                         <View style={{backgroundColor: Palette.focused, flex: 1, alignItems: 'center'}}>
@@ -228,7 +228,7 @@ const getUser = async () => {
                     {/* </View> */}
                     </TouchableOpacity>
                 </Link>
-                <Link href={{pathname: "/missinglist"}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.shadowAccent, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
+                <Link href={{pathname: "/missinglist",  params: {type: "Missing"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.shadowAccent, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
                     <TouchableOpacity >
                         {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
                             <View style={{backgroundColor: Palette.shadowAccent, flex: 1, alignItems: 'center', justifyContent: 'center'}}>
@@ -245,7 +245,7 @@ const getUser = async () => {
                         {/* </View> */}
                     </TouchableOpacity>
                 </Link>
-                <Link href={{pathname: "/patientcardlist", params: {patientlist: done, type: "Done"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.background, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
+                <Link href={{pathname: "/patientcardlist", params: {type: "Done"}}} asChild style={[styles.horizontalcontainer,{backgroundColor: Palette.background, alignItems: 'center',  margin: 10, borderRadius: 15}]}>
                 <TouchableOpacity >
                     {/* <View style={[styles.horizontalcontainer, {backgroundColor: Palette.focused, alignItems: 'center'}]}> */}
                         <View style={{backgroundColor: Palette.background, flex: 1, alignItems: 'center'}}>

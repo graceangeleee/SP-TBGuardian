@@ -1,13 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs, Stack } from 'expo-router';
-import { userType } from '../../Constants/Types';
+import { userType, submissionType } from '../../Constants/Types';
 
 interface UserDataContext {
   userid: string;
   setUserID: React.Dispatch<React.SetStateAction<string>>;
   user: userType | null;
   setUser: React.Dispatch<React.SetStateAction<userType | null>>;
+  pending: submissionType[];
+  setPending:React.Dispatch<React.SetStateAction<submissionType[]>>;
 }
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
@@ -35,9 +37,10 @@ interface WorkerDataProviderProps {
 export const UserDataProvider: React.FC<WorkerDataProviderProps> = ({ children }) => {
   const [user, setUser] = useState<userType | null>(null);
   const [userid, setUserID] = useState("");
-
+  const [pending, setPending] = useState<submissionType[] >([])
+;
   return (
-    <UserDataContext.Provider value={{ userid, setUserID, user, setUser }}>
+    <UserDataContext.Provider value={{ userid, setUserID, user, setUser, pending, setPending }}>
       {children}
     </UserDataContext.Provider>
   );
@@ -54,6 +57,7 @@ export default function Layout() {
         {/* <Stack.Screen name="addpatient" options={{headerTitle: "Add Patient", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines}}/> */}
         <Stack.Screen name="submissionbin" options={{headerBackTitle:"Back", headerTitle: "Submission Bin"}}/>
         <Stack.Screen name="schedule" options={{headerBackTitle:"Back", headerTitle: "Calendar"}}/>
+        <Stack.Screen name="recordvideo" options={{headerBackTitle:"Back", headerTitle: "Record Video"}}/>
       </Stack>
     </UserDataProvider>
   );

@@ -5,6 +5,7 @@ import { agendaType } from "../../Constants/Types";
 import Palette from "../../Constants/Palette";
 import { supabase } from "../../supabase";
 import { Link } from "expo-router";
+import AgendaCard from "../../components/agendacard";
 
 const WorkerSchedule: React.FC = () => {
     const [markedDates, setMarkedDates] = useState<{ [date: string]: { marked: boolean } }>({});
@@ -17,18 +18,12 @@ const WorkerSchedule: React.FC = () => {
     useEffect(()=> {
         getConfirmedAgenda()
         getPendingAgenda()
-    })
+    }, [])
 
     const onDayPress = () => {
     }
 
-    const renderList = ({item} : {item: agendaType}) => {
-        return(
-            <View>
-                <Text>{item.text}</Text>
-            </View>
-        )
-    }
+    const renderList = ({item} : {item: agendaType}) => <AgendaCard id = {item.id} patientid={item.patientid} workerid={item.workerid} content={item.text} date={item.date} time={item.time} confirmed={item.confirmed} type="Worker"/>
 
     const togglePending = () => {
         if(pendingPressed===false) {
@@ -70,7 +65,6 @@ const WorkerSchedule: React.FC = () => {
         }
     }
 
-
     //function that retrieves the agenda that are not confirmed from the database
     const getPendingAgenda = async () => {
         setLoading(true)
@@ -78,8 +72,8 @@ const WorkerSchedule: React.FC = () => {
             const {data, error, status} = await supabase
             .from('agenda')
             .select()
-            .eq('status', 'FALSE')
-            .eq('confirmed', 'FALSE')
+            .eq('status', "FALSE")
+            .eq('confirmed', "FALSE")
 
             if(error && status!==406){
                 throw error;
@@ -97,12 +91,9 @@ const WorkerSchedule: React.FC = () => {
         }
     }
 
-
-    return(
-        <View style={{flex: 1}}>
+    return (
+        <View style={styles.container}>
             {/* calendar */}
-
-            
             <Calendar
                 markedDates={markedDates}
                 onDayPress={onDayPress}
@@ -119,27 +110,26 @@ const WorkerSchedule: React.FC = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* agenda flatlist
-            {confirmedPressed? 
-                (
+            {/* agenda flatlist */}
+            <View style={styles.flatListContainer}>
+                {confirmedPressed ? (
                     <FlatList
                         data={confirmedAgenda}
                         renderItem={renderList}
                         keyExtractor={(item)=>item.id}
-                        style={{flex: 4}}
                     />
-                ):(
+                ) : (
                     <FlatList
                         data={pendingAgenda}
                         renderItem={renderList}
                         keyExtractor={(item)=>item.id}
                     />
-                )
-            } */}
+                )}
+            </View>
 
             {/* set new schedule button */}
             <Link href={{pathname: "/setschedule"}} style={styles.addbutton}>
-                <TouchableOpacity >
+                <TouchableOpacity style={styles.touchable}>
                     <Text style={styles.buttontext}>Set A New Schedule</Text>
                 </TouchableOpacity>
             </Link>
@@ -150,37 +140,56 @@ const WorkerSchedule: React.FC = () => {
 export default WorkerSchedule;
 
 const styles = StyleSheet.create({
-    switchcontainer:{
+    container: {
+        flex: 1,
+    },
+    switchcontainer: {
         flexDirection: 'row',
-        margin: 10
-    },
-    addbutton:{
-        backgroundColor: '#219EBC',
-        height: 50,
-        position: 'absolute',
-        alignSelf: 'flex-end',
-        bottom: 0,
-        left:0,
-        right:0,
         margin: 10,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center'
     },
-    switch:{
+    switch: {
         flex: 1,
         justifyContent: 'center', 
         alignItems: 'center',
-        padding: 10,
-        
+        padding: 10, 
     },
-    switchtext:{
+    switchtext: {
         fontFamily: 'Poppins',
         fontSize: 16
     },
-    buttontext:{
+    flatListContainer: {
+        flex: 1,
+    },
+    addbutton: {
+        height: 50,
+        margin: 10,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    buttontext: {
         fontFamily: 'Poppins',
         color: 'white', 
-        fontSize: 16
-    }
+        fontSize: 16,
+        textTransform: 'uppercase', // Convert text to uppercase
+        fontWeight: 'bold', // Add bold font weight
+    },
+    touchable:{
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: Palette.buttonOrLines,
+        borderRadius: 20, // Add borderRadius to match the button
+        margin: 10, // Add margin for spacing
+    },
+    
+
 })

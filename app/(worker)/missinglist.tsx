@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 const MissingList = () => {
     const { missing } = useWorkerData();
     const [smsAvailable, setSMSAvailable] = useState(false);
-    console.log(missing)
     const renderList = ({item}: {item: submissionType}) => <SubmissionCard content = {item} type="Missing" smsAvailable={smsAvailable}/> 
 
     useEffect(()=> {

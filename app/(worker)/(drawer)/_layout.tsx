@@ -1,7 +1,7 @@
 import React from 'react';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { Drawer } from 'expo-router/drawer';
-import { router, usePathname } from 'expo-router';
+import { router, usePathname, Redirect } from 'expo-router';
 import { useEffect } from 'react';
 import { Image, StyleSheet, View, Text } from 'react-native';
 import { FontAwesome,
@@ -10,7 +10,8 @@ import { FontAwesome,
 } from '@expo/vector-icons';
 import Palette from '../../../Constants/Palette';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-
+import { supabase } from '../../../supabase';
+import * as SecureStore from 'expo-secure-store';
 
 const PatientDrawerContent: React.FC<any> = (props) => {
     const pathname = usePathname();
@@ -18,6 +19,26 @@ const PatientDrawerContent: React.FC<any> = (props) => {
     useEffect(() => {
         console.log(pathname);
     }, [pathname]);
+
+
+    const signOut = async () => {
+      console.log("Clicked")
+      try {
+          const { error } = await supabase.auth.signOut();
+  
+          if (error) {
+              throw error;
+          }
+  
+          // Sign-out successful
+          router.replace("/(authenticate)/userchoice")
+          await SecureStore.setItemAsync("id", "")
+          console.log('User signed out successfully');
+      } catch (error) {
+          if(error instanceof Error) console.error('Error signing out:', error.message);
+      }
+  };
+  
 
     return (
     <DrawerContentScrollView style={styles.drawer} {...props}>
@@ -84,7 +105,7 @@ const PatientDrawerContent: React.FC<any> = (props) => {
         labelStyle={[styles.drawerLabel, {color: pathname == "/settings" ? Palette.buttonOrLines : 'white'}]}
         style={{backgroundColor: pathname == "/settings" ? Palette.shadowAccent : Palette.buttonOrLines}}
       />
-      <TouchableOpacity style={{backgroundColor: Palette.buttonOrLines, marginLeft: 20, flexDirection: 'row', alignItems: 'center'}}>
+      <TouchableOpacity style={{backgroundColor: Palette.buttonOrLines, marginLeft: 20, flexDirection: 'row', alignItems: 'center'}} onPress={signOut}>
         <Entypo name="log-out" size={30} color="white" />
         <Text style={[styles.drawerLabel, {marginLeft: 10}]}>Log out</Text>
       </TouchableOpacity>

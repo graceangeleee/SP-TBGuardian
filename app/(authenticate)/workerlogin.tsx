@@ -6,13 +6,13 @@ import { supabase } from '../../supabase';
 import * as SecureStore from 'expo-secure-store';
 
 
-AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-      supabase.auth.startAutoRefresh()
-    } else {
-      supabase.auth.stopAutoRefresh()
-    }
-})
+// AppState.addEventListener('change', (state) => {
+//     if (state === 'active') {
+//       supabase.auth.startAutoRefresh()
+//     } else {
+//       supabase.auth.stopAutoRefresh()
+//     }
+// })
 
   const WorkerLogin = () => {
 

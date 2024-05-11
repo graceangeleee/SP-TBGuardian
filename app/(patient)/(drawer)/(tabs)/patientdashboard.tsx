@@ -1,30 +1,27 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert} from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useState, useEffect } from "react";
 import Palette from '../../../../Constants/Palette';
 import { FontAwesome } from '@expo/vector-icons';
-// import { TouchableOpacity } from "react-native-gesture-handler";
 import { Link } from "expo-router";
 import { Session } from "@supabase/supabase-js";
+import * as SecureStore from 'expo-secure-store';
 import { supabase } from '../../../../supabase';
 import { submissionType } from '../../../../Constants/Types';
 import { useUserData } from '../../_layout';
-import * as SecureStore from 'expo-secure-store';
-
-
-
-
 
 export default function PatientDashboard({ session }: { session: Session }) {
     const [percentage, setPercentage] = useState(0);
-    const [tosubmit, setToSubmit] =     useState(0);
+    const [tosubmit, setToSubmit] = useState(0);
     const [rewards, setRewards] = useState(23);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState("");
-    const [pending, setPending] = useState<submissionType[]>([])
     const [missing, setMissing] = useState<submissionType[]>([])
-    const {setUser} = useUserData();
+    const [pendingstatus, setPendingStatus] = useState("")
+    const [deadlinestring, setDeadlineString] = useState("")
+    const { setUser, pending, setPending } = useUserData();
+
 
     useEffect(() => {
         getDetails();
@@ -40,143 +37,119 @@ export default function PatientDashboard({ session }: { session: Session }) {
 
 
     const changeStatus = () => {
-        if(percentage === 0){
+        if (percentage === 0) {
             setStatus("Get started")
-        }else if(percentage > 0 && percentage < 50){
+        } else if (percentage > 0 && percentage < 50) {
             setStatus("Keep going!")
-        }else if(percentage === 50){
+        } else if (percentage === 50) {
             setStatus("You're halfway there!")
-        }else if (percentage === 100){
+        } else if (percentage === 100) {
             setStatus("Done!")
-        }else{
+        } else {
             setStatus("You're almost there!")
         }
     }
 
-    async function getDetails(){
+    async function getDetails() {
         setLoading(true);
-        try{
+        try {
             const id = await SecureStore.getItemAsync("id");
-            if(id != null){
+            if (id != null) {
                 getPendingDetails(id)
                 getUserData(id)
                 getMissing(id)
-                getUser(id)
-            }else{
+
+            } else {
                 console.log("No session")
             }
-        }catch(error){
+        } catch (error) {
             console.log("Error retrieving data")
-        }finally{
+        } finally {
             setLoading(false)
         }
     }
 
-    async function getMissing (userid:string){
+    async function getMissing(userid: string) {
         const date = new Date().toISOString();
 
-        try{
-            if(userid === null || userid ===""){
-                throw new Error('No user logged in');
-            }else{
-                const { data, error, status } = await supabase
-                .from('submissions')
-                .select()
-                .eq("patientid", userid)
-                .eq("status", "FALSE")
-                .lt("deadline", date)
-            
-
-                if (error && status !==406){
-                    throw error;
-                }
-
-                if(data){
-                    setMissing(data)
-                }
-            }
-        } catch (error){
-            if(error instanceof Error){
-                Alert.alert(error.message)
-            }
-        }finally{
-            return
-        }
-    }
-
-    const getUser = async (id: string) => {
-        try{
-
-            if (id === null || id === "") {
+        try {
+            if (userid === null || userid === "") {
                 throw new Error('No user logged in');
             } else {
                 const { data, error, status } = await supabase
-                    .from('users')
+                    .from('submissions')
                     .select()
-                    .eq('id', id)
-                    .single();
-                
-                if(data){
-                   setUser(data)
+                    .eq("patientid", userid)
+                    .eq("status", "FALSE")
+                    .lt("deadline", date)
+
+
+                if (error && status !== 406) {
+                    throw error;
+                }
+
+                if (data) {
+                    setMissing(data)
                 }
             }
-        }catch (error) {
+        } catch (error) {
             if (error instanceof Error) {
-                Alert.alert(error.message);
+                Alert.alert(error.message)
             }
         } finally {
             return
         }
     }
 
-
-    async function getPendingDetails(userid: string){
+    async function getPendingDetails(userid: string) {
         const date = new Date().toISOString();
-        try{
-            if(userid === null || userid ===""){
+        try {
+            if (userid === null || userid === "") {
                 throw new Error('No user logged in');
-            }else{
+            } else {
                 const { data, error, status } = await supabase
-                .from('submissions')
-                .select()
-                .eq("patientid", userid)
-                .eq("status", "FALSE")
-                .gt("deadline", date)
-            
+                    .from('submissions')
+                    .select()
+                    .eq("patientid", userid)
+                    .eq("status", "FALSE")
+                    .gt("deadline", date)
 
-                if (error && status !==406){
+
+                if (error && status !== 406) {
                     throw error;
                 }
 
-                if(data){
+                if (data) {
+                    data.sort((a, b) => a.number - b.number)
                     setPending(data)
                 }
             }
-        } catch (error){
-            if(error instanceof Error){
+        } catch (error) {
+            if (error instanceof Error) {
                 Alert.alert(error.message)
             }
-        }finally{
+        } finally {
             return
         }
     }
 
-    async function getUserData(userid:string){
-        try{
+    async function getUserData(userid: string) {
+        try {
             if (userid === null || userid === "") {
                 throw new Error('No user logged in');
             } else {
                 const { data, error, status } = await supabase
                     .from('users')
-                    .select('to_submit')
+                    .select()
                     .eq('id', userid)
                     .single();
-                
-                if(data){
+
+                if (data) {
+                    setUser(data)
                     setToSubmit(data.to_submit)
                 }
             }
-        }catch (error) {
+        } catch (error) {
             if (error instanceof Error) {
                 Alert.alert(error.message);
             }
@@ -186,91 +159,94 @@ export default function PatientDashboard({ session }: { session: Session }) {
     }
 
     const calcualtePercentage = () => {
-        const percent = ((60-tosubmit) / 60) * 100
+        const percent = ((60 - tosubmit) / 60) * 100
         setPercentage(percent)
         changeStatus();
     }
 
     return (
-        loading ? (
-            <></>
-        ) : (
-            <ScrollView>
-                <View style={styles.statuscontainer}>
-                    <View style={{ flexDirection: 'row' }}>
-                        <Text style={[styles.statustext, { flex: 2.5 }]}>{status}</Text>
-                        <View style={{ flex: 1 }}>
-                            <View style={[styles.percentage, styles.elevation]}>
-                                <Text style={styles.status}>{percentage}%</Text>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-                <View style={[styles.statuscontainer, {flexDirection: 'row', backgroundColor: Palette.focused, padding: 15}]}>
-                    <FontAwesome name="exclamation-triangle" size={35} color="red" />
-                    <Text style={{fontFamily: 'Heading', fontSize: 20, color: Palette.buttonOrLines, marginLeft: 5}}>You have {missing.length} missing submission/s!</Text>
-                </View>
-                
-                <View style={styles.horizontalcontainer}>
-                    {pending.length > 0 ? (
-                        <View style={[styles.colcontainer, { backgroundColor: Palette.shadowAccent }, styles.shadowprop, styles.elevation]}>
-                            <View style={{ backgroundColor: Palette.shadowAccent, flex: 2 }}>
-                                <View style={{ flexDirection: 'row', backgroundColor: Palette.shadowAccent, alignItems: 'center' }}>
-                                    <FontAwesome style={{ marginRight: 10 }} name="tasks" size={24} color={'white'} />
-                                    <Text style={styles.detailheader}>Next</Text>
+        <>
+            <StatusBar style="auto" />
+            {pending === undefined ? (
+                <></>
+            ) : (
+                <ScrollView>
+                    <View style={styles.statuscontainer}>
+                        <View style={{ flexDirection: 'row' }}>
+                            <Text style={[styles.statustext, { flex: 2.5 }]}>{status}</Text>
+                            <View style={{ flex: 1 }}>
+                                <View style={[styles.percentage, styles.elevation]}>
+                                    <Text style={styles.status}>{percentage}%</Text>
                                 </View>
-                                <Text style={styles.detailheader}>submission</Text>
-                                <Text style={styles.details}>{pending[0].deadline.toString()}</Text>
                             </View>
-                            <Link href={{pathname: "/submissionbin", params: {number: pending[0].number, deadline: pending[0].deadline, status: pending[0].status, id: pending[0].id}}} asChild style={styles.button}>
+                        </View>
+                    </View>
+                    <View style={[styles.statuscontainer, { flexDirection: 'row', backgroundColor: Palette.focused, padding: 15 }]}>
+                        <FontAwesome name="exclamation-triangle" size={35} color="red" />
+                        <Text style={{ fontFamily: 'Heading', fontSize: 20, color: Palette.buttonOrLines, marginLeft: 5 }}>You have {missing.length} missing submission/s!</Text>
+                    </View>
+
+                    <View style={styles.horizontalcontainer}>
+                        {pending.length > 0 ? (
+                            <View key={pending[0].id} style={[styles.colcontainer, { backgroundColor: Palette.shadowAccent }, styles.shadowprop, styles.elevation]}>
+                                <View style={{ backgroundColor: Palette.shadowAccent, flex: 2 }}>
+                                    <View style={{ flexDirection: 'row', backgroundColor: Palette.shadowAccent, alignItems: 'center' }}>
+                                        <FontAwesome style={{ marginRight: 10 }} name="tasks" size={24} color={'white'} />
+                                        <Text style={styles.detailheader}>Next</Text>
+                                    </View>
+                                    <Text style={styles.detailheader}>submission</Text>
+                                    <Text style={styles.details}>{pending[0].deadline.toString()}</Text>
+                                </View>
+                                <Link href={{ pathname: "/submissionbin" }} asChild style={styles.button}>
+                                    <TouchableOpacity>
+                                        <Text style={styles.buttontext}>Submit</Text>
+                                    </TouchableOpacity>
+                                </Link>
+                            </View>
+                        ) : (
+                            <View style={[styles.colcontainer, { backgroundColor: Palette.shadowAccent }, styles.shadowprop, styles.elevation]}>
+                                <Text>No pending submissions</Text>
+                            </View>
+                        )}
+                        <View style={[styles.colcontainer, { backgroundColor: Palette.buttonOrLines }, styles.shadowprop, styles.elevation]}>
+                            <View style={{ flexDirection: 'row', backgroundColor: Palette.buttonOrLines, alignItems: 'center' }}>
+                                <FontAwesome style={{ marginRight: 10 }} name="exclamation-triangle" size={24} color={'white'} />
+                                <Text style={styles.detailheader}>Reminders</Text>
+                            </View>
+
+                            <Text style={styles.details}>Placeholder Date</Text>
+                            <Link href={{ pathname: "/schedule" }} asChild style={styles.button}>
                                 <TouchableOpacity>
-                                    <Text style={styles.buttontext}>Submit</Text>
+                                    <Text style={styles.buttontext}>See Schedule</Text>
                                 </TouchableOpacity>
                             </Link>
                         </View>
-                    ) : (
-                        <View style={[styles.colcontainer, { backgroundColor: Palette.shadowAccent }, styles.shadowprop, styles.elevation]}>
-                            <Text>No pending submissions</Text>
-                        </View>
-                    )}
-                    <View style={[styles.colcontainer, { backgroundColor: Palette.buttonOrLines }, styles.shadowprop, styles.elevation]}>
-                        <View style={{ flexDirection: 'row', backgroundColor: Palette.buttonOrLines, alignItems: 'center' }}>
-                            <FontAwesome style={{ marginRight: 10 }} name="exclamation-triangle" size={24} color={'white'} />
-                            <Text style={styles.detailheader}>Reminders</Text>
-                        </View>
-    
-                        <Text style={styles.details}>Placeholder Date</Text>
-                        <Link href={{pathname: "/schedule"}} asChild style={styles.button}>
-                                <TouchableOpacity>
-                                    <Text style={styles.buttontext}>Submit</Text>
-                                </TouchableOpacity>
-                            </Link>
+
                     </View>
-    
-                </View>
-                <View style={[styles.rewardscontainer, styles.elevation]}>
-                    <View style={{ flexDirection: "row", alignItems: 'center' }}>
-                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                            <FontAwesome name="star" size={30} color={Palette.accent} />
-                            <Text style={styles.rewardsearned}>{rewards}/100</Text>
+                    <View style={[styles.rewardscontainer, styles.elevation]}>
+                        <View style={{ flexDirection: "row", alignItems: 'center' }}>
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                <FontAwesome name="star" size={30} color={Palette.accent} />
+                                <Text style={styles.rewardsearned}>{rewards}/100</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Text style={styles.reward}>{100 - rewards}</Text>
+                                <FontAwesome style={{ marginLeft: 5, marginRight: 5 }} name="star" size={20} color={Palette.accent} />
+                                <Text style={styles.reward}>to a reward</Text>
+                            </View>
                         </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={styles.reward}>{100 - rewards}</Text>
-                            <FontAwesome style={{ marginLeft: 5, marginRight: 5 }} name="star" size={20} color={Palette.accent} />
-                            <Text style={styles.reward}>to a reward</Text>
-                        </View>
+
+
+                        <Text style={[styles.rewardins, { alignSelf: 'center' }]}>Earn reward points by complying to your medication and submitting videos on time</Text>
+                        <Link href='/(drawer)/(tabs)/rewards' asChild style={[styles.button, { marginTop: 10, }]}>
+                            <TouchableOpacity>
+                                <Text style={styles.buttontext}>Show rewards</Text>
+                            </TouchableOpacity>
+                        </Link>
                     </View>
-    
-    
-                    <Text style={[styles.rewardins, { alignSelf: 'center' }]}>Earn reward points by complying to your medication and submitting videos on time</Text>
-                    <Link href='/(drawer)/(tabs)/rewards' asChild style={[styles.button, { marginTop: 10, }]}>
-                        <TouchableOpacity>
-                            <Text style={styles.buttontext}>Show rewards</Text>
-                        </TouchableOpacity>
-                    </Link>
-                </View>
-            </ScrollView>
-        )
+                </ScrollView>
+            )}
+        </>
     );
 }
 

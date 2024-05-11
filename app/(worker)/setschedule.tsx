@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from "react";
-import { View, TextInput, Text, StyleSheet, Platform, TouchableOpacity, Pressable } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, TextInput, Text, StyleSheet, Alert, Platform, TouchableOpacity, Pressable } from "react-native";
 import { useWorkerData } from "./_layout";
 import { SelectList } from "react-native-dropdown-select-list";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Palette from "../../Constants/Palette";
+import { supabase } from "../../supabase";
+import * as SecureStore from 'expo-secure-store';
 
-const ScheduleSetter: React.FC = () => {
+interface NewSchedule {
+  patientid: string;
+  workerid: string;
+  text: string;
+  date: string;
+  time: string;
+}
+
+const SetSchedule: React.FC = () => {
   const { monitoring } = useWorkerData();
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
@@ -16,27 +26,61 @@ const ScheduleSetter: React.FC = () => {
   const [isDirty, setIsDirty] = useState<boolean>(false); // To track whether the date picker is changed
   const [patientArray, setPatientArray] = useState<{ key: string; value: string; }[]>([]);
 
-  const toggleDatePicker = () => {
-    setShowDatePicker(!showDatePicker);
-  };
+  const toggleDatePicker = useCallback(() => {
+    setShowDatePicker(prevState => !prevState);
+  }, []);
 
-  const toggleTimePicker = () => {
-    setShowTimePicker(!showTimePicker);
-  };
+  const toggleTimePicker = useCallback(() => {
+    setShowTimePicker(prevState => !prevState);
+  }, []);
 
-  const confirmDateTime = () => {
+  const confirmDateTime = useCallback(() => {
     toggleDatePicker();
     toggleTimePicker();
     setIsDirty(true); // Indicate that the date picker is changed
-  };
+  }, [toggleDatePicker, toggleTimePicker]);
 
-  const cancelDateTime = () => {
+  const cancelDateTime = useCallback(() => {
     setShowDatePicker(false);
     setShowTimePicker(false);
     setIsDirty(false); // Reset the dirty state
+  }, []);
+
+  const insertSchedule = async () => {
+
+    const worker_id = await SecureStore.getItemAsync("id");
+    if (worker_id !== null && date !== undefined && time !== undefined) {
+      // const datestring = date.toLocaleDateString();
+      // const timestring = time.toLocaleTimeString();
+      const dateoptions = { month: 'long', day: 'numeric', year: 'numeric' };
+      const timeoptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+      const newAgenda: NewSchedule = {
+        workerid: worker_id,
+        patientid: selectedPatient,
+        text: notes,
+        date: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+
+      };
+
+      try {
+        const { data, error } = await supabase
+          .from('agenda')
+          .insert(newAgenda);
+
+        if (error) {
+          Alert.alert(error.message);
+        }
+
+        Alert.alert("Successfully booked a schedule")
+      } catch (error) {
+        console.log("Error setting schedule:", error);
+      }
+    }
   };
 
   useEffect(() => {
+    console.log("Rendered")
     if (monitoring !== null) {
       const modifiedArray = monitoring.map(obj => ({
         key: `${obj.id}`,
@@ -46,15 +90,13 @@ const ScheduleSetter: React.FC = () => {
     } else {
       setPatientArray([]);
     }
-  }, [monitoring]);
+  }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Select a patient:</Text>
-      {monitoring !== null ? (
+      {monitoring !== null && (
         <SelectList data={patientArray} setSelected={setSelectedPatient} />
-      ) : (
-        <></>
       )}
       <Text style={styles.label}>Notes:</Text>
       <TextInput
@@ -94,7 +136,6 @@ const ScheduleSetter: React.FC = () => {
             onPress={toggleTimePicker}
           />
         </Pressable>
-        
         {showTimePicker && (
           <DateTimePicker
             value={time || new Date()}
@@ -121,9 +162,9 @@ const ScheduleSetter: React.FC = () => {
           </View>
         )}
       </View>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={insertSchedule}>
         <View style={styles.button}>
-            <Text style={{fontFamily: 'Poppins', fontSize: 16}}>Set Schedule</Text>
+          <Text style={{ fontFamily: 'Poppins', fontSize: 16 }}>Set Schedule</Text>
         </View>
       </TouchableOpacity>
     </View>
@@ -150,15 +191,14 @@ const styles = StyleSheet.create({
   dateTimeContainer: {
     marginBottom: 20,
   },
-  button:{
+  button: {
     backgroundColor: Palette.background,
     height: 50,
     margin: 10,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-
   }
 });
 
-export default ScheduleSetter;
+export default SetSchedule;

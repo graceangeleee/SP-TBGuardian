@@ -17,7 +17,7 @@ export interface userType{
 
 export interface submissionType{
     created_at: Date,
-    deadline: Date,
+    deadline: string,
     id: string,
     patientid: string,
     status: boolean,
@@ -38,7 +38,7 @@ export interface agendaType{
     id: string,
     created_at: Date,
     text: string,
-    date: Date,
+    date: string,
     time: string,
     patientid: string,
     workerid: string,
