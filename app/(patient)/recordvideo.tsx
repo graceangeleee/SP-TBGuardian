@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, Text, View, Button, SafeAreaView, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Button, SafeAreaView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Camera, CameraView } from 'expo-camera';
 import { ResizeMode, Video } from 'expo-av';
 import * as MediaLibrary from 'expo-media-library';
@@ -22,6 +22,7 @@ export default function RecordVideo() {
   const [facing, setFacing] = useState<CameraType>(CameraType.back);
   const params = useLocalSearchParams();
   const {submissionid} = params;
+
 
   useEffect(() => {
     (async () => {
@@ -96,6 +97,7 @@ export default function RecordVideo() {
         const filePath = `${submissionid}.${img.type === 'image' ? 'png' : 'mp4'}`;
         const contentType = img.type === 'image' ? 'image/png' : 'video/mp4'
 
+        setUploading(true)
         try{
           const {data, error} = await supabase.storage
           .from("videos")
@@ -103,8 +105,9 @@ export default function RecordVideo() {
           // await loadImages()
           if(error) console.log(error)
           
-          console.log(data?.path)
+
           if(data) updateSubmission(data?.path)
+          setUploading(false)
           Alert.alert("Successfully submitted video")
         }catch(error){
           if(error instanceof Error)console.log(error.message)
@@ -112,14 +115,23 @@ export default function RecordVideo() {
       }
     }
 
-    let saveVideo = () => {
+    const saveVideo = () => {
       MediaLibrary.saveToLibraryAsync(video).then(() => {
         setVideo(undefined);
       });
     };
 
 
+    if(uploading){
+      return(
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      )
+    }
+
     return (
+      
       <SafeAreaView style={styles.container}>
         <Video
           style={styles.video}

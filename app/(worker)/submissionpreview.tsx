@@ -7,9 +7,9 @@ import { useLocalSearchParams } from "expo-router";
 import * as SecureStore from 'expo-secure-store';
 import { supabase } from "../../supabase";
 import { Session } from "@supabase/supabase-js";
-import { commentType } from "../../Constants/Types";
+import { commentType, submissionType } from "../../Constants/Types";
 import { Link } from "expo-router";
-import { useUserData } from "./_layout";
+
 
 interface NewComment {
     content: string,
@@ -17,29 +17,56 @@ interface NewComment {
     submissionid: string | string[] | undefined
 }
 
-const SubmissionBin = ({ session }: { session: Session }) => {
+const SubmissionPreview = ({ session }: { session: Session }) => {
     const params = useLocalSearchParams();
     const {status, id } = params;
-    const [submissionstatus, setSubmissionStatus] = useState("");
     const description = "Placeholder description";
     const [comment, setComment] = useState("");
     const [comments, setComments] = useState<commentType[]>([]);
-    const { pending } = useUserData();
+    const [submission, setSubmission] = useState<submissionType>();
 
 
     useEffect(() => {
         getComments()
+        getSubmissionDetails()
     }, [comment]);
 
-    useEffect(() => {
-        if (status === "false") {
-            setSubmissionStatus("Ongoing");
-        } else {
-            setSubmissionStatus("Done");
-        }
-    }, [status]);
+    // useEffect(() => {
+    //     if (status === "false") {
+    //         setSubmissionStatus("Ongoing");
+    //     } else {
+    //         setSubmissionStatus("Done");
+    //     }
+    // }, [status]);
 
-    async function getComments() {
+    const getSubmissionDetails = async() => {
+        try {
+            if (id !== null || id !== "") {
+                const { data, error, status } = await supabase
+                    .from('submissions')
+                    .select()
+                    .eq("id", id)
+                    .single()
+
+                if (error && status !== 406) {
+                    throw error;
+                }
+                if (data) {
+                    setSubmission(data);
+                }
+            } else {
+                Alert.alert("This submission bin does not exist");
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                Alert.alert(error.message);
+            }
+        } finally {
+            return;
+        }
+    }
+
+    const getComments = async () => {
         try {
             if (id !== null || id !== "") {
                 const { data, error, status } = await supabase
@@ -137,35 +164,26 @@ const SubmissionBin = ({ session }: { session: Session }) => {
 
     return (
         <ScrollView>
-            {pending !== null && (
+            {submission !== null && (
                 <View>
                     <Text style={styles.title}>SUBMISSION DETAILS</Text>
-                    {pending && pending.length > 0 && (
+        
                     <View style={styles.card}>
                         <View style={styles.cardheading}>
-                            <Text style={styles.cardtitle}>Submission #{pending[0].number} </Text>
+                            <Text style={styles.cardtitle}>Submission #{submission?.number} </Text>
                         </View>
-                        <Text style={styles.cardtitle}>Status: {pending[0]?.verified && pending[0].status? "Verified by Worker" : pending[0]?.status ? "Submitted"  : "Pending"}</Text>
+                        <Text style={styles.cardtitle}>Status: {submission?.status ? "Submitted" : submission?.verified ? "Confirmed" : "Pending"}</Text>
                         <View style={styles.cardheading}>
-                            <Text style={styles.cardsubtitle}>{pending[0].deadline}</Text>
+                            <Text style={styles.cardsubtitle}>{submission?.deadline}</Text>
                         </View>
                         <Text style={styles.description}>Placeholder description</Text>
-                        
-                            {pending[0].status? (
-                                <TouchableOpacity disabled style={[{backgroundColor: Palette.lightGray}, styles.button]}>
-                                    <Text style={styles.buttontext}>Already submitted Video</Text>
-                                </TouchableOpacity>
-                            ): (
-                                <Link href={{ pathname: "/recordvideo", params:{submissionid: pending[0].id}}} style={[styles.button, {backgroundColor: Palette.shadowAccent}]}>
-                                    <TouchableOpacity>
-                                        <Text style={styles.buttontext}>Submit a Video</Text>
-                                    </TouchableOpacity>
-                                </Link>
-                            )}
-                            
-                        
+                        <Link href={{ pathname: "/videoviewer", params:{videoId: submission?.videopath, submissionid: submission?.id, patientid: submission?.patientid}}} style={styles.button}>
+                            <TouchableOpacity>
+                                <Text style={styles.buttontext}>Verify Submission</Text>
+                            </TouchableOpacity>
+                        </Link>
                     </View>
-                )}
+                
                     <View style={styles.divider}></View>
                     <Text style={styles.title}>COMMENTS</Text>
                     <View>
@@ -223,6 +241,7 @@ const styles = StyleSheet.create({
     },
     button:{
         marginTop: 15,
+        backgroundColor: Palette.shadowAccent,
         padding: 10,
         borderRadius: 60,
         alignContent: 'center',
@@ -252,4 +271,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default SubmissionBin;
+export default SubmissionPreview;

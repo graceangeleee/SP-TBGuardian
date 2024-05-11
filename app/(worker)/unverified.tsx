@@ -7,7 +7,7 @@ const Unverified = () => {
     const {unverified} = useWorkerData();
 
     
-    const renderList = ({item}: {item: submissionType}) => <SubmissionCard content = {item} type="Missing" /> 
+    const renderList = ({item}: {item: submissionType}) => <SubmissionCard content = {item} type="Unverified" /> 
 
     return(
         <>
