@@ -145,12 +145,12 @@ const SubmissionBin = ({ session }: { session: Session }) => {
                         <View style={styles.cardheading}>
                             <Text style={styles.cardtitle}>Submission #{pending[0].number} </Text>
                         </View>
-                        <Text style={styles.cardtitle}>Status: {pending[0].status}</Text>
+                        <Text style={styles.cardtitle}>Status: {pending[0].status? "Submitted" : "Pending"}</Text>
                         <View style={styles.cardheading}>
                             <Text style={styles.cardsubtitle}>{pending[0].deadline}</Text>
                         </View>
                         <Text style={styles.description}>Placeholder description</Text>
-                        <Link href={{ pathname: "/recordvideo" }} style={styles.button}>
+                        <Link href={{ pathname: "/recordvideo", params:{submissionid: pending[0].id}}} style={styles.button}>
                             <TouchableOpacity>
                                 <Text style={styles.buttontext}>Submit a Video</Text>
                             </TouchableOpacity>

@@ -111,8 +111,7 @@ export default function PatientDashboard({ session }: { session: Session }) {
                     .from('submissions')
                     .select()
                     .eq("patientid", userid)
-                    .eq("status", "FALSE")
-                    .gt("deadline", date)
+                    .gte("deadline", date)
 
 
                 if (error && status !== 406) {
