@@ -45,10 +45,10 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({content, type, smsAvaila
         }
     }
 
-    const sendSMS = async (cnumber: string, deadline: Date) =>{ 
+    const sendSMS = async (cnumber: string, deadline: string) =>{ 
         const deadline_string = deadline.toString()
         if(smsAvailable){
-            const {result} = await SMS.sendSMSAsync(cnumber, "MISSING: You have missed a dose in your TB DOTS program last "+ deadline_string + ". Kindly check you TBGuardian app for notifications. This is also a reminder to refrain from skipping your daily dose.")
+            const {result} = await SMS.sendSMSAsync(cnumber, "MISSING: You have missed a dose in your TB DOTS program last "+ deadline_string + ". Kindly check your TBGuardian app for notifications. This is also a reminder to refrain from skipping your daily dose.")
             if(result === "sent") Alert.alert("Sent successfully")
         }else{
             Alert.alert("Messaging not available in this device")
@@ -113,9 +113,7 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({content, type, smsAvaila
                 ):(
                     <></>
                 )}
-                {/* <TouchableOpacity style={styles.button}>
-                    <Text style={styles.buttontext}>Send SMS</Text>
-                </TouchableOpacity> */}
+        
             </View>
         )}
     </>

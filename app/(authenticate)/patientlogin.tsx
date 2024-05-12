@@ -6,13 +6,13 @@ import { supabase } from '../../supabase';
 import * as SecureStore from 'expo-secure-store';
 
 
-AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-      supabase.auth.startAutoRefresh()
-    } else {
-      supabase.auth.stopAutoRefresh()
-    }
-})
+// AppState.addEventListener('change', (state) => {
+//     if (state === 'active') {
+//       supabase.auth.startAutoRefresh()
+//     } else {
+//       supabase.auth.stopAutoRefresh()
+//     }
+// })
 
   const PatientLogin = () => {
     const [username, setUsername] = useState('');
@@ -45,9 +45,6 @@ AppState.addEventListener('change', (state) => {
             });
     
             if(data && data.session?.user.id){
-                // console.log(data)
-                // console.log("Logged in");
-                // await setUserID(data.session.user.id)
                 await SecureStore.setItem("id", data.session.user.id)
                 router.replace("/(patient)");
             }else{

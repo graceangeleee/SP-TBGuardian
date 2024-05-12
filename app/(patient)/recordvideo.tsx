@@ -11,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { router } from 'expo-router';
 
+
 export default function RecordVideo() {
   let cameraRef = useRef<CameraView>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | undefined>();
@@ -72,7 +73,7 @@ export default function RecordVideo() {
           .eq("id", submissionid)
 
           if(error) console.log("Failed to update the submission bin")
-  
+        
           router.replace('/submissionbin')
           
       }catch(error){

@@ -58,6 +58,8 @@ export default function Layout() {
         <Stack.Screen name="submissionbin" options={{headerBackTitle:"Back", headerTitle: "Submission Bin"}}/>
         <Stack.Screen name="schedule" options={{headerBackTitle:"Back", headerTitle: "Calendar"}}/>
         <Stack.Screen name="recordvideo" options={{headerBackTitle:"Back", headerTitle: "Record Video"}}/>
+        <Stack.Screen name="changepassword" options={{headerBackTitle:"Back", headerTitle: "Change Password"}}/>
+   
       </Stack>
     </UserDataProvider>
   );

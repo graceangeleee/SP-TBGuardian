@@ -37,7 +37,7 @@ const SubmissionBin = ({ session }: { session: Session }) => {
         } else {
             setSubmissionStatus("Done");
         }
-    }, [status]);
+    }, []);
 
     async function getComments() {
         try {

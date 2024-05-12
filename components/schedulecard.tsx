@@ -17,15 +17,7 @@ const ScheduleCard: React.FC<ScheduleCardProps> = (props) => {
             <Text style={styles.detail}>{date}</Text>
             <Text style={styles.title}>You have a face-to-face appointment</Text>
             <Text style={styles.detail}>{details}</Text>
-            {status ? (
-                <TouchableOpacity disabled style={[styles.button, {backgroundColor:Palette.darkGray}]}>
-                    <Text style={[styles.detail, {color: 'white'}]}>Confirmed</Text>
-                </TouchableOpacity>
-            ) : (
-                <TouchableOpacity style={[styles.button, {backgroundColor: Palette.accent}]}>
-                    <Text style={[styles.detail, {color: 'white'}]}>Confirm</Text>
-                </TouchableOpacity>
-            )}
+        
         </View>
     )
 }

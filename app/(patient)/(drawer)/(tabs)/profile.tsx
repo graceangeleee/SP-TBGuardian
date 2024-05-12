@@ -4,6 +4,7 @@ import Palette from "../../../../Constants/Palette";
 import { Session } from "@supabase/supabase-js";
 import ProfileDetails from "../../../../components/profiledetails";
 import { useUserData } from "../../_layout";
+import { Link } from "expo-router";
 
 export default function Profile({ session }: { session: Session }) {
     const {user} = useUserData();
@@ -28,7 +29,6 @@ export default function Profile({ session }: { session: Session }) {
             await setAge(calculatedAge);
         }
         setLoading(false)
-        
     }
 
     return (
@@ -40,6 +40,9 @@ export default function Profile({ session }: { session: Session }) {
                         <Text style={styles.name}>{user?.firstname} {user?.lastname}</Text>
                         <Text style={styles.number}>{user?.contact_number}</Text>
                         <Text style={styles.number}>{user?.email}</Text>
+                        <Link href = {{pathname: "/changepassword"}}>
+                            <Text style={{textDecorationLine: 'underline'}}>Change password?</Text>
+                        </Link>
                     </View>
                     <ScrollView style={styles.details}>
                         <ProfileDetails title="Program" detail={"Placeholder program"} />

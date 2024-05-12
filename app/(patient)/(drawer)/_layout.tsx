@@ -30,7 +30,10 @@ const signOut = async () => {
 
         // Sign-out successful
         router.replace("/(authenticate)/userchoice")
-        await SecureStore.setItemAsync("id", "")
+
+    
+        await SecureStore.deleteItemAsync("id");
+
         console.log('User signed out successfully');
         
     } catch (error) {

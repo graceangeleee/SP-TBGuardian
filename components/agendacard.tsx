@@ -14,10 +14,9 @@ interface AgendaCardProps {
     time: string;
     confirmed: boolean;
     type: string;
-    confirmButton?: (id: string, patientid: string) => void;
 }
 
-const AgendaCard: React.FC<AgendaCardProps> = ({ id, patientid, workerid, content, date, time, confirmed, type, confirmButton }) => {
+const AgendaCard: React.FC<AgendaCardProps> = ({ id, patientid, workerid, content, date, time, confirmed, type }) => {
     const [patient, setPatient] = useState<userType>();
     const [loading, setLoading] = useState(false);
 
@@ -48,12 +47,6 @@ const AgendaCard: React.FC<AgendaCardProps> = ({ id, patientid, workerid, conten
         }
     };
 
-    const confirmAgenda = async () => {
-        const patientid = await SecureStore.getItem("id");
-        if (patientid !== null && patientid !== undefined && confirmButton) {
-            confirmButton(id, patientid);
-        }
-    };
 
     return (
         <>
@@ -67,15 +60,7 @@ const AgendaCard: React.FC<AgendaCardProps> = ({ id, patientid, workerid, conten
                         <Text style={styles.details}>{date}   |   {time}</Text>
                         {/* <Text style={styles.details}>Remaining Submissions: {content.to_submit}</Text> */}
                     </View>
-                    {(type === "Patient" && !confirmed) ? (
-                        <TouchableOpacity style={[styles.button, { backgroundColor: Palette.buttonOrLines }]} onPress={confirmAgenda}>
-                            <Text style={styles.buttontext}>Confirm Schedule</Text>
-                        </TouchableOpacity>
-                    ) : type === "Patient" && confirmed ? (
-                        <View style={[styles.button, { backgroundColor: Palette.darkGray }]}>
-                            <Text style={styles.buttontext}>Schedule Confirmed</Text>
-                        </View>
-                    ) : null}
+                    
                 </View>
             )}
         </>

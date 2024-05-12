@@ -6,6 +6,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Palette from "../../Constants/Palette";
 import { supabase } from "../../supabase";
 import * as SecureStore from 'expo-secure-store';
+import * as SMS from 'expo-sms';
 
 interface NewSchedule {
   patientid: string;
@@ -46,8 +47,34 @@ const SetSchedule: React.FC = () => {
     setIsDirty(false); // Reset the dirty state
   }, []);
 
-  const insertSchedule = async () => {
+  const sendSMS = async() => {
+    try{
+      const {data, error} = await supabase
+      .from('users')
+      .select('contact_number')
+      .eq('id', selectedPatient)
+      .single()
 
+      if(error){
+        console.log("Patient not found")
+      }else{
+        const isAvailable = await SMS.isAvailableAsync()
+        if(isAvailable){
+          const {result} = await SMS.sendSMSAsync(data.contact_number, `AGENDA: You are scheduled for a face-to-face checkup at the TB DOTS Center on ${date?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} at ${time?.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`)
+          if(result === "sent")Alert.alert("Message sent succesfully")
+        }else{
+          Alert.alert("Messaging not available in this device")
+        }
+      }
+    }catch(error){
+      if(error instanceof Error) Alert.alert(error.message)
+    }finally{
+      return
+    }
+  }
+
+  const insertSchedule = async () => {
+    await sendSMS()
     const worker_id = await SecureStore.getItemAsync("id");
     if (worker_id !== null && date !== undefined && time !== undefined) {
       // const datestring = date.toLocaleDateString();
@@ -62,6 +89,7 @@ const SetSchedule: React.FC = () => {
         time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
       };
+
 
       try {
         const { data, error } = await supabase
@@ -92,6 +120,7 @@ const SetSchedule: React.FC = () => {
     }
   }, []);
 
+  
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Select a patient:</Text>

@@ -1,9 +1,11 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../../supabase";
-import { Text, TextInput, SafeAreaView, Button, Alert, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { Text, TextInput, SafeAreaView, View, Button, Alert, ScrollView, TouchableOpacity, StyleSheet, Platform, ActivityIndicator } from "react-native";
 import React from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { SelectList } from "react-native-dropdown-select-list";
+import Palette from "../../Constants/Palette";
 
 
 
@@ -17,13 +19,22 @@ const AddPatient = () => {
     const [address, setAddress] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [cnumber, setCnumber] = useState("")
+    const [numberError, setNumberError] = useState("");
     const [emailError, setEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
+    const [addressError, setAddressError] = useState("");
     const [heightError, setHeightError] = useState("");
     const [weightError, setWeightError] = useState("");
+    const [fnameError, setFnameError] = useState("");
+    const [lnameError, setLnameError] = useState("")
     const decimalRegex = /^[0-9]*\.?[0-9]*$/;
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [signup, setSignup] = useState(true);
+    const [newId, setNewId] = useState("")
+    
+    const genderArray = [{key: "Male", value: "Male"}, {key: "Female", value: "Female"}]
 
     const handleEmailValidation = (email:string)=> {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -54,6 +65,15 @@ const AddPatient = () => {
           }
     }
 
+    const addressValidation = (address: string) => {
+        if(address === "" || address === null){
+            setAddressError("Please enter an address")
+        }else{
+            setAddress(address)
+            setAddressError("")
+        }
+    }
+
     const passwordValidation = (password: string) => {
         // Regular expressions to match a small letter, a capital letter, and a special character
         const smallRegex = /[a-z]/;
@@ -74,42 +94,155 @@ const AddPatient = () => {
         }
       };
 
-      const birthdayHandler = (event: any, selectedDate? : Date) => {
-        const currentDate = selectedDate || birthday;
-        setShowDatePicker(false);
-        setBirthday(currentDate);
+      const birthdayHandler = (event: any, selectedDate?: Date) => {
+        if (selectedDate !== undefined) {
+            setBirthday(selectedDate);
+            setShowDatePicker(false); // Assuming you have setShowDatePicker defined elsewhere
+        }
+    };
+
+      const fnameValidator = (fname:string) => {
+        if(fname === "" || fname === null){
+            setFnameError("This field cannot be empty")
+        }else{
+            setFirstname(fname)
+            setFnameError("")
+        }
       }
+
+      const lnameValidator = (lname:string) => {
+        if(lname === "" || lname === null){
+            setLnameError("This field cannot be empty")
+        }else{
+            setLastname(lname)
+            setLnameError("")
+        }
+      }
+
+      const signUp = async() => {
+
+        if(email && password){
+            try{
+
+                const {data, error} = await supabase.auth.signUp({
+                
+                    email: email, 
+                    password: password
+                })
+
+                if(error){
+                    console.log(error)
+                }else{
+                    if(data.session)setNewId(data.session.user.id)
+                    setSignup(false)
+                }  
+
+            }catch(error){
+                if(error instanceof Error)console.log(error.message)
+            }
+        }
+      }
+
+      const updateUser = async () => {
+        if(firstname && lastname && gender && address && birthday && height && weight && cnumber ){
+            try{
+                const {error} = await supabase
+                .from('users')
+                .update(
+                    {firstname: firstname, 
+                    lastname: lastname, 
+                    gender: gender, 
+                    birthday: birthday, 
+                    height: height, 
+                    weight: weight, 
+                    address: address, 
+                    contact_number:cnumber,
+                    status: "FALSE"
+                },
+
+                )
+                .eq("id", newId)
+
+                if(error){
+                    Alert.alert("Failed to update user details")
+                }else{
+                    Alert.alert("Successfully updated user details")
+                }
+
+            }catch(error){
+                if(error instanceof Error) Alert.alert(error.message)
+            }
+        }
+      }
+
+      const numberValidator = (phoneNumber: string) => {
+        // Regular expression for Philippine phone numbers
+        const phoneNumberRegex = /^(09|\+639)\d{9}$/;
+    
+        if(phoneNumberRegex.test(phoneNumber)){
+            setCnumber(phoneNumber)
+            setNumberError("")
+        }else{
+            setNumberError("Enter a valid phone nubmer")
+        }
+    };
 
     
     return(
         <SafeAreaView>
-            <ScrollView>
+            {signup? (
+                <View>
                 <TextInput 
-                style={styles.inputfield}
-                placeholder="Email"
-                onChangeText={handleEmailValidation}
-                />
-                {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
-                <TextInput 
-                style={styles.inputfield}
-                placeholder="Password"
-                onChangeText={passwordValidation}
-                />
+                    style={styles.inputfield}
+                    placeholder="Email"
+                    onChangeText={handleEmailValidation}
+                    />
+                    {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+                    
+                    <TextInput 
+                    style={styles.inputfield}
+                    placeholder="Password"
+                    textContentType='password'
+                    secureTextEntry={true}
+                    onChangeText={passwordValidation}
+                    />
+                    {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+
+                    <Button title="Signup" onPress={signUp}/>
+                </View>
+            ): (
+                <ScrollView>               
                 <TextInput 
                 style={styles.inputfield}
                 placeholder="First Name"
-                onChangeText={setFirstname}
+                onChangeText={fnameValidator}
                 />
+                {fnameError ? <Text style={styles.errorText}>{fnameError}</Text> : null}
+               
+                
                 <TextInput 
                 style={styles.inputfield}
                 placeholder="Last Name"
-                onChangeText={setLastname}
+                onChangeText={lnameValidator}
                 />
+                {lnameError ? <Text style={styles.errorText}>{lnameError}</Text> : null}
+
+                <TextInput 
+                style={styles.inputfield}
+                placeholder="Contact number"
+                onChangeText={numberValidator}
+                keyboardType="numeric"
+                />
+                {weightError ? <Text style={styles.errorText}>{weightError}</Text> : null}
+               
+
                 <TextInput 
                 style={styles.inputfield}
                 placeholder="Address"
-                onChangeText={setAddress}
+                onChangeText={addressValidation}
                 />
+                {addressError ? <Text style={styles.errorText}>{addressError}</Text> : null}
+               
                 <TextInput 
                 style={styles.inputfield}
                 placeholder="Weight in kg"
@@ -117,32 +250,34 @@ const AddPatient = () => {
                 keyboardType="numeric"
                 />
                 {weightError ? <Text style={styles.errorText}>{weightError}</Text> : null}
+               
                 <TextInput 
                 style={styles.inputfield}
                 placeholder="Height in cm"
                 onChangeText={heightValidation}
                 keyboardType="numeric"
                 />
+
                 {heightError ? <Text style={styles.errorText}>{heightError}</Text> : null}
-                {/* <Picker
-                    selectedValue={gender}
-                    style={{ height: 50, width: 200 }}
-                    onValueChange={(itemValue:string, itemIndex) => setGender(itemValue)}
-                >
-                    <Picker.Item label="Male" value="Male"/>
-                    <Picker.Item label="Female" value="Female"/>
-                </Picker> */}
+                
+                <View style={[styles.inputfield, {alignItems: 'stretch'}]}>
+                    <SelectList boxStyles={{borderWidth: 0}} fontFamily="Poppins" data={genderArray} setSelected={setGender} /> 
+                </View>
                 <Button title="Show Date Picker" onPress={() => setShowDatePicker(true)} />
+               
                 {showDatePicker && (
                     <DateTimePicker
                     value={birthday}
                     mode="date"
-                    display="default"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
                     onChange={birthdayHandler}
                     />
                 )}
-                <Button title="Submit"/>
+
+                <Button title="Submit" onPress={updateUser}/>
             </ScrollView>
+            )}
+            
         </SafeAreaView>
     )
 }
