@@ -32,7 +32,7 @@ const PatientDrawerContent: React.FC<any> = (props) => {
   
           // Sign-out successful
           router.replace("/(authenticate)/userchoice")
-          await SecureStore.setItemAsync("id", "")
+          await SecureStore.deleteItemAsync("id");
           console.log('User signed out successfully');
       } catch (error) {
           if(error instanceof Error) console.error('Error signing out:', error.message);

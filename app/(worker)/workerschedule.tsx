@@ -9,78 +9,41 @@ import AgendaCard from "../../components/agendacard";
 
 const WorkerSchedule: React.FC = () => {
     const [markedDates, setMarkedDates] = useState<{ [date: string]: { marked: boolean } }>({});
-    const [confirmedAgenda, setConfirmedAgenda] = useState<agendaType[]>([]);
-    const [pendingAgenda, setPendingAgenda] = useState<agendaType[]>([]);
-    const [confirmedPressed, setConfirmedPressed] = useState(true);
-    const [pendingPressed, setPendingPressed] = useState(false);
+    const [agenda, setAgenda] = useState<agendaType[]>([]);
+
     const [loading, setLoading] = useState(false)
 
     useEffect(()=> {
-        getConfirmedAgenda()
-        getPendingAgenda()
+        getAgenda()
+
     }, [])
+    
+
 
     const onDayPress = () => {
+
     }
 
-    const renderList = ({item} : {item: agendaType}) => <AgendaCard id = {item.id} patientid={item.patientid} workerid={item.workerid} content={item.text} date={item.date} time={item.time} confirmed={item.confirmed} type="Worker"/>
+    const renderList = ({item} : {item: agendaType}) => <AgendaCard id = {item.id} patientid={item.patientid} workerid={item.workerid} content={item.text} date={item.date} time={item.time} confirmed={item.confirmed} type="Worker" />
 
-    const togglePending = () => {
-        if(pendingPressed===false) {
-            setPendingPressed(true)
-            setConfirmedPressed(false)
-        }
-    }
 
-    const toggleConfirmed = () => {
-        if(confirmedPressed===false){
-            setConfirmedPressed(true)
-            setPendingPressed(false)
-        }
-    }
-
-    //functions that retrieves the agenda that are confirmed from the database
-    const getConfirmedAgenda = async () => {
-        setLoading(true)
-        try{
-            const {data, error, status} = await supabase
-            .from('agenda')
-            .select()
-            .eq('status', 'FALSE')
-            .eq('confirmed', 'TRUE')
-
-            if(error && status!==406){
-                throw error;
-            }
-
-            if(data){
-                setConfirmedAgenda(data)
-            }
-        }catch (error){
-            if(error instanceof Error){
-                Alert.alert(error.message)
-            }
-        }finally{
-            setLoading(false)
-        }
-    }
 
     //function that retrieves the agenda that are not confirmed from the database
-    const getPendingAgenda = async () => {
+    const getAgenda = async () => {
         setLoading(true)
         try{
             const {data, error, status} = await supabase
             .from('agenda')
             .select()
-            .eq('status', "FALSE")
-            .eq('confirmed', "FALSE")
+
 
             if(error && status!==406){
                 throw error;
             }
 
             if(data){
-                setPendingAgenda(data)
+                data.sort((a, b) => a.date - b.date);
+                setAgenda(data)
             }
         }catch (error){
             if(error instanceof Error){
@@ -100,31 +63,15 @@ const WorkerSchedule: React.FC = () => {
                 style={{margin: 10, borderRadius: 10, borderWidth: 1, borderColor: Palette.buttonOrLines}}
             />
 
-            {/* switch (like tab) that switches between confirmed and not confirmed agenda */}
-            <View style={styles.switchcontainer}>
-                <TouchableOpacity onPress={toggleConfirmed} style={[styles.switch, confirmedPressed? {borderBottomWidth: 3, borderColor: Palette.buttonOrLines} : {}]}>
-                    <Text style={styles.switchtext}>CONFIRMED</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={togglePending} style={[styles.switch, pendingPressed? {borderBottomWidth: 3, borderColor: Palette.buttonOrLines} : {}]}>
-                    <Text style={styles.switchtext}>PENDING</Text>
-                </TouchableOpacity>
-            </View>
+           
 
             {/* agenda flatlist */}
             <View style={styles.flatListContainer}>
-                {confirmedPressed ? (
-                    <FlatList
-                        data={confirmedAgenda}
-                        renderItem={renderList}
-                        keyExtractor={(item)=>item.id}
-                    />
-                ) : (
-                    <FlatList
-                        data={pendingAgenda}
-                        renderItem={renderList}
-                        keyExtractor={(item)=>item.id}
-                    />
-                )}
+                <FlatList
+                    data={agenda}
+                    renderItem={renderList}
+                    keyExtractor={(item)=>item.id}
+                />
             </View>
 
             {/* set new schedule button */}

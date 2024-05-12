@@ -32,15 +32,14 @@ async function getMonitoring(){
          const { data, error, status } = await supabase
          .from('users')
          .select()
-         .eq("status", "TRUE")
-         .eq("confirmed", "FALSE")
- 
+         .eq("status", "FALSE")
+
          if(error && status !== 406){
              throw error;
          }
  
          if(data){
-             setUnverified(data);
+             setMonitoring(data);
          }
      }catch (error){
          if(error instanceof Error){

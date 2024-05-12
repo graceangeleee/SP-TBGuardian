@@ -1,6 +1,6 @@
 import { View, Text } from "react-native";
 import {StyleSheet } from "react-native";
-import Palette from "@/constants/Palette";
+import Palette from "../Constants/Palette";
 
 const RewardCard = () => {
     return(
