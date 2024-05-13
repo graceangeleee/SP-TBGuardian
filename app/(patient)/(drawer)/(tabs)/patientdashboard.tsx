@@ -1,35 +1,27 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { Redirect } from 'expo-router';
 import { useState, useEffect } from "react";
 import Palette from '../../../../Constants/Palette';
 import { FontAwesome } from '@expo/vector-icons';
 import { Link } from "expo-router";
 import { Session } from "@supabase/supabase-js";
-import * as SecureStore from 'expo-secure-store';
-import { supabase } from '../../../../supabase';
 import { submissionType } from '../../../../Constants/Types';
 import { useUserData } from '../../_layout';
 
 export default function PatientDashboard({ session }: { session: Session }) {
     const [percentage, setPercentage] = useState(0);
     const [tosubmit, setToSubmit] = useState(0);
-    const [rewards, setRewards] = useState(23);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState("");
     const [missing, setMissing] = useState<submissionType[]>([])
-    const [pendingstatus, setPendingStatus] = useState("")
-    const [deadlinestring, setDeadlineString] = useState("")
-    const { setUser, pending, setPending } = useUserData();
+    const { user, pending } = useUserData();
 
 
     useEffect(() => {
-        getDetails();
-    }, [session])
 
-    useEffect(() => {
         calcualtePercentage()
-    }, [tosubmit])
+    
+    }, [])
 
     useEffect(() => {
         changeStatus()
@@ -50,125 +42,19 @@ export default function PatientDashboard({ session }: { session: Session }) {
         }
     }
 
-    async function getDetails() {
-        setLoading(true);
-        try {
-            const id = await SecureStore.getItemAsync("id");
-            if (id != null) {
-                getPendingDetails(id)
-                getUserData(id)
-                getMissing(id)
-
-            } else {
-                console.log("No session")
-            }
-        } catch (error) {
-            console.log("Error retrieving data")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    async function getMissing(userid: string) {
-        setLoading(true)
-        const date = new Date().toISOString();
-
-        try {
-            if (userid === null || userid === "") {
-                throw new Error('No user logged in');
-            } else {
-                const { data, error, status } = await supabase
-                    .from('submissions')
-                    .select()
-                    .eq("patientid", userid)
-                    .eq("status", "FALSE")
-                    .lt("deadline", date)
-
-
-                if (error && status !== 406) {
-                    throw error;
-                }
-
-                if (data) {
-                    setMissing(data)
-                }
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                Alert.alert(error.message)
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    async function getPendingDetails(userid: string) {
-        setLoading(true)
-        const date = new Date().toISOString();
-        try {
-            if (userid === null || userid === "") {
-                throw new Error('No user logged in');
-            } else {
-                const { data, error, status } = await supabase
-                    .from('submissions')
-                    .select()
-                    .eq("patientid", userid) 
-                    .gte("deadline", date)
-
-
-                if (error && status !== 406) {
-                    throw error;
-                }
-
-                if (data) {
-                    data.sort((a, b) => a.number - b.number)
-                    setPending(data)
-                }
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                Alert.alert(error.message)
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    async function getUserData(userid: string) {
-        setLoading(true)
-        try {
-            if (userid === null || userid === "") {
-                throw new Error('No user logged in');
-            } else {
-                const { data, error, status } = await supabase
-                    .from('users')
-                    .select()
-                    .eq('id', userid)
-                    .single();
-
-                if (data) {
-                    setUser(data)
-                    setToSubmit(data.to_submit)
-                }
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                Alert.alert(error.message);
-            }
-        } finally {
-            setLoading(false)
-        }
-    }
-
     const calcualtePercentage = () => {
-        const percent = ((60 - tosubmit) / 60) * 100
-        setPercentage(Math.round(percent * 100) / 100)
-        changeStatus();
+        if(user?.to_submit!=null){
+            const percent = ((60 - user?.to_submit) / 60) * 100
+            setPercentage(Math.round(percent * 100) / 100)
+            changeStatus();
+        }
     }
 
     return (
         <>
-            <StatusBar style="auto" />
+            <StatusBar style="auto"/>
+
+       
             {loading? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <ActivityIndicator size="large" color="#0000ff" />
@@ -230,29 +116,11 @@ export default function PatientDashboard({ session }: { session: Session }) {
                         </View>
 
                     </View>
-                    <View style={[styles.rewardscontainer, styles.elevation]}>
-                        <View style={{ flexDirection: "row", alignItems: 'center' }}>
-                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                <FontAwesome name="star" size={30} color={Palette.accent} />
-                                <Text style={styles.rewardsearned}>{rewards}/100</Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={styles.reward}>{100 - rewards}</Text>
-                                <FontAwesome style={{ marginLeft: 5, marginRight: 5 }} name="star" size={20} color={Palette.accent} />
-                                <Text style={styles.reward}>to a reward</Text>
-                            </View>
-                        </View>
-
-
-                        <Text style={[styles.rewardins, { alignSelf: 'center' }]}>Earn reward points by complying to your medication and submitting videos on time</Text>
-                        <Link href='/(drawer)/(tabs)/rewards' asChild style={[styles.button, { marginTop: 10, }]}>
-                            <TouchableOpacity>
-                                <Text style={styles.buttontext}>Show rewards</Text>
-                            </TouchableOpacity>
-                        </Link>
-                    </View>
+                    
                 </ScrollView>
+                
             )}
+ 
         </>
     );
 }
@@ -301,6 +169,7 @@ const styles = StyleSheet.create({
         color: 'white'
 
     },
+
     statustext:{
         fontFamily: 'Heading',
         fontSize: 20,

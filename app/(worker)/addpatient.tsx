@@ -1,11 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../supabase";
-import { Text, TextInput, SafeAreaView, View, Button, Alert, ScrollView, TouchableOpacity, StyleSheet, Platform, ActivityIndicator } from "react-native";
+import { Text, TextInput, SafeAreaView, Pressable, View, Button, Alert, ScrollView, TouchableOpacity, StyleSheet, Platform, ActivityIndicator } from "react-native";
 import React from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { SelectList } from "react-native-dropdown-select-list";
 import Palette from "../../Constants/Palette";
+import { router } from "expo-router";
 
 
 
@@ -36,6 +37,10 @@ const AddPatient = () => {
     
     const genderArray = [{key: "Male", value: "Male"}, {key: "Female", value: "Female"}]
 
+    const toggleDatePicker = useCallback(() => {
+        setShowDatePicker(prevState => !prevState);
+      }, []);
+
     const handleEmailValidation = (email:string)=> {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (emailRegex.test(email)) {
@@ -45,6 +50,9 @@ const AddPatient = () => {
             setEmailError("Please enter a valid email address.")
         }
     }
+    const cancelDateTime = useCallback(() => {
+        setShowDatePicker(false);
+      }, []);
 
     const heightValidation = (height:string) => {
    
@@ -120,7 +128,7 @@ const AddPatient = () => {
       }
 
       const signUp = async() => {
-
+        setLoading(true)
         if(email && password){
             try{
 
@@ -139,11 +147,14 @@ const AddPatient = () => {
 
             }catch(error){
                 if(error instanceof Error)console.log(error.message)
+            }finally{
+                setLoading(false)
             }
         }
       }
 
       const updateUser = async () => {
+        setLoading(true)
         if(firstname && lastname && gender && address && birthday && height && weight && cnumber ){
             try{
                 const {error} = await supabase
@@ -171,6 +182,9 @@ const AddPatient = () => {
 
             }catch(error){
                 if(error instanceof Error) Alert.alert(error.message)
+            }finally{
+                router.replace('/workerdashboard')
+                setLoading(false)
             }
         }
       }
@@ -207,8 +221,18 @@ const AddPatient = () => {
                     onChangeText={passwordValidation}
                     />
                     {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
-
-                    <Button title="Signup" onPress={signUp}/>
+                    
+                    {!loading ? (
+                        <TouchableOpacity style={styles.button} onPress={signUp}>
+                        <Text style={styles.buttontext}>Signup</Text>
+                        </TouchableOpacity>
+              
+                    ): (
+                        <View style={styles.button}>
+                           <ActivityIndicator/>
+                        </View>
+                    )}
+                    
                 </View>
             ): (
                 <ScrollView>               
@@ -260,21 +284,55 @@ const AddPatient = () => {
 
                 {heightError ? <Text style={styles.errorText}>{heightError}</Text> : null}
                 
-                <View style={[styles.inputfield, {alignItems: 'stretch'}]}>
+                <View style={[styles.inputfield, {alignItems: 'stretch', paddingVertical: 5}]}>
                     <SelectList boxStyles={{borderWidth: 0}} fontFamily="Poppins" data={genderArray} setSelected={setGender} /> 
                 </View>
-                <Button title="Show Date Picker" onPress={() => setShowDatePicker(true)} />
-               
-                {showDatePicker && (
+                {/* <Button title="Show Date Picker" onPress={() => setShowDatePicker(true)} />
+                */}
+                {/* {showDatePicker && (
                     <DateTimePicker
                     value={birthday}
                     mode="date"
                     display={Platform.OS === "ios" ? "spinner" : "default"}
                     onChange={birthdayHandler}
                     />
-                )}
+                )} */}
+                <View style={styles.dateTimeContainer}>
+            
+                    <Pressable onPress={toggleDatePicker}>
+                    <TextInput
+                        style={styles.inputfield}
+                        placeholder={birthday.toDateString() !== "" ? birthday.toDateString() : "Birthdate"}
+                        onPress={toggleDatePicker}
+                    />
+                    </Pressable>
+                    {showDatePicker && (
+                    <DateTimePicker
+                        value={birthday || new Date()}
+                        mode="date"
+                        display={Platform.OS === "ios" ? "spinner" : "calendar"}
+                        onChange={(event: any, selectedDate?: Date) => {
+                        if (selectedDate) {
+                            setBirthday(selectedDate);
+                            if (Platform.OS === "ios") toggleDatePicker();
+                        } else {
+                            cancelDateTime(); // Cancel if date is not selected
+                        }
+                        }}
+                    />
+                    )}
+                    </View>
 
-                <Button title="Submit" onPress={updateUser}/>
+                {!loading ? (
+                    <TouchableOpacity style={styles.button} onPress={updateUser}>
+                        <Text style={styles.buttontext}>Update User Details</Text>
+                    </TouchableOpacity>
+                ): (
+                    <View style={styles.button}>
+                        <ActivityIndicator/>
+                    </View>
+                )}
+                
             </ScrollView>
             )}
             
@@ -299,7 +357,25 @@ const styles = StyleSheet.create({
     errorText: {
         color: 'red',
         marginBottom: 10,
-      },
+        marginLeft: 30
+    },
+    button:{
+        backgroundColor: Palette.buttonOrLines,
+        borderRadius: 20,
+        padding: 20,
+        marginHorizontal: 20,
+        alignItems: 'center', 
+        marginTop: 20
+    }, 
+    buttontext:{
+        fontFamily: 'Poppins',
+        fontSize: 16,
+        color: 'white'
+    },
+    dateTimeContainer: {
+        marginBottom: 20,
+    },
+
 })
 
 

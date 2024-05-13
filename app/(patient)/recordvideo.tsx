@@ -10,6 +10,7 @@ import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { router } from 'expo-router';
+import { useUserData } from './_layout';
 
 
 export default function RecordVideo() {
@@ -23,6 +24,7 @@ export default function RecordVideo() {
   const [facing, setFacing] = useState<CameraType>(CameraType.back);
   const params = useLocalSearchParams();
   const {submissionid} = params;
+  const {setPending, user} = useUserData()
 
 
   useEffect(() => {
@@ -64,6 +66,36 @@ export default function RecordVideo() {
 
   if (video) {
 
+    async function getPendingDetails() {
+    
+      const date = new Date().toISOString();
+      try {
+          if (user?.id === null || user?.id === "") {
+              throw new Error('No user logged in');
+          } else {
+              const { data, error, status } = await supabase
+                  .from('submissions')
+                  .select()
+                  .eq("patientid", user?.id) 
+                  .gte("deadline", date)
+
+
+              if (error && status !== 406) {
+                  throw error;
+              }
+
+              if (data) {
+                  data.sort((a, b) => a.number - b.number)
+                  setPending(data)
+              }
+          }
+      } catch (error) {
+          if (error instanceof Error) {
+              Alert.alert(error.message)
+          }
+      }  
+  }
+
     //function that will update the submission with the id of the video submitted
     const updateSubmission = async (videopath: string) => {
       try{
@@ -72,9 +104,15 @@ export default function RecordVideo() {
           .update({videopath: videopath, status: "TRUE"})
           .eq("id", submissionid)
 
-          if(error) console.log("Failed to update the submission bin")
+          if(error){
+            
+            console.log("Failed to update the submission bin")
         
-          router.replace('/submissionbin')
+          } else{
+            getPendingDetails()
+            router.replace('/submissionbin')
+          }
+          
           
       }catch(error){
         if(error instanceof Error) console.log(error.message)

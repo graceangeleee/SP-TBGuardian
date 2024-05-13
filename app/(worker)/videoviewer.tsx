@@ -4,6 +4,7 @@ import { ResizeMode, Video } from 'expo-av';
 import { supabase } from '../../supabase';
 import { useLocalSearchParams, router } from 'expo-router';
 import Palette from '../../Constants/Palette';
+import { useWorkerData } from './_layout';
 
 
 // interface VideoPlayerProps {
@@ -12,9 +13,10 @@ import Palette from '../../Constants/Palette';
 
 const VideoPlayer: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading]  = useState<boolean>(true);
   const params = useLocalSearchParams();
   const {videoId, submissionid, patientid} = params;
+  const {setUnverified, setVerified} = useWorkerData()
 
 
   useEffect(() => {
@@ -67,6 +69,8 @@ const VideoPlayer: React.FC = () => {
           if(error){
             if(error instanceof Error)console.log(error.message)
           }else{
+            getVerified()
+            getUnverified()
             Alert.alert("Successfully verified submission")
           }
         }
@@ -79,6 +83,60 @@ const VideoPlayer: React.FC = () => {
     }
   }
 
+
+  async function getVerified(){
+    setLoading(true)
+    const date = new Date().toISOString();
+
+    try{
+        const { data, error, status } = await supabase
+        .from('submissions')
+        .select()
+        .eq("status", "TRUE")
+        .eq("verified", "TRUE")
+
+        if(error && status !== 406){
+            throw error;
+        }
+
+        if(data){
+            setVerified(data) 
+        }
+    }catch (error){
+        if(error instanceof Error){
+            Alert.alert(error.message)
+        }
+    }finally{
+        setLoading(false)
+    }
+}
+
+async function getUnverified(){
+    setLoading(true)
+    const date = new Date().toISOString();
+
+    try{
+        const { data, error, status } = await supabase
+        .from('submissions')
+        .select()
+        .eq("status", "TRUE")
+        .eq("verified", "FALSE")
+
+        if(error && status !== 406){
+            throw error;
+        }
+
+        if(data){
+            setUnverified(data) 
+        }
+    }catch (error){
+        if(error instanceof Error){
+            Alert.alert(error.message)
+        }
+    }finally{
+        setLoading(false)
+    }
+}
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

@@ -46,15 +46,18 @@ const EditWorkerPassword = () => {
                 value={newPassword}
                 onChangeText={setNewPassword}
             />
-            <TouchableOpacity onPress={handleEditPassword} style={styles.button}>
+            
                 {!loading? ( 
+                    <TouchableOpacity onPress={handleEditPassword} style={styles.button}>
                     <Text style={styles.buttontext}>Edit Password</Text>
-
+                    </TouchableOpacity>
                 ): (
-                    <ActivityIndicator/>
+                    <View style={styles.button}>
+                        <ActivityIndicator/>
+                    </View>
                 )}
                 
-            </TouchableOpacity>
+            
           
         </View>
     )

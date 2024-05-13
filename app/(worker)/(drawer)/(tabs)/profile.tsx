@@ -5,6 +5,8 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "../../../../supabase";
 import ProfileDetails from "../../../../components/profiledetails";
 import { useWorkerData } from "../../_layout";
+import { BackgroundImage } from "react-native-elements/dist/config";
+import { Link } from "expo-router";
 
 export default function Profile({ session }: { session: Session }) {
     const {user} = useWorkerData()
@@ -35,7 +37,7 @@ export default function Profile({ session }: { session: Session }) {
 
 
     return (
-        <View style={{ flex: 1, backgroundColor: Palette.accent }}>
+        <View style={{ flex: 1, backgroundColor: Palette.accent}    }>
             {loading ? (
                 <></>
             ) : (
@@ -45,6 +47,9 @@ export default function Profile({ session }: { session: Session }) {
                         <Text style={styles.name}>{user?.firstname} {user?.lastname}</Text>
                         <Text style={styles.number}>{user?.contact_number}</Text>
                         <Text style={styles.number}>{user?.email}</Text>
+                        <Link href = {{pathname: "/editworkerpass"}}>
+                            <Text style={{textDecorationLine: 'underline', fontFamily: 'Poppins', fontSize: 16}}>Change password?</Text>
+                        </Link>
                     </View>
                     <ScrollView style={styles.details}>
                         {/* <View style={styles.statusheader}>

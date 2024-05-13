@@ -1,4 +1,3 @@
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useFonts } from 'expo-font';
@@ -15,6 +14,7 @@ export default function App() {
         Poppins: require('../assets/fonts/Poppins-Regular.ttf'),
         ...FontAwesome.font,
       });
+
     
 
       useEffect(() => {

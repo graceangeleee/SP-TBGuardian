@@ -11,7 +11,7 @@ interface PatientCardProps{
 
 const PatientCard: React.FC<PatientCardProps> = ({content}) => {
     return(
-        <Link href={{pathname: "/submissioncardlist", params:{patientid: content.id}}} asChild>
+        <Link href={{pathname: "/patientprofile", params:{patientid: content.id}}} asChild>
             <TouchableOpacity style={styles.container}>  
                 <View>
                     <Text style={styles.name}>{content.firstname} {content.lastname}</Text>
@@ -37,9 +37,10 @@ const styles = StyleSheet.create({
     },
     name:{
         fontFamily: 'Heading',
-        fontSize: 16
+        fontSize: 18
     },
     details:{
-        fontFamily: 'Poppins'
+        fontFamily: 'Poppins',
+        fontSize: 16
     }
 })

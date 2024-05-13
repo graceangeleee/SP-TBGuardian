@@ -17,9 +17,9 @@ interface NewComment {
     submissionid: string | string[] | undefined
 }
 
-const SubmissionPreview = ({ session }: { session: Session }) => {
+const SubmissionPreview = () => {
     const params = useLocalSearchParams();
-    const {status, id } = params;
+    const {status, id, type } = params;
     const description = "Placeholder description";
     const [comment, setComment] = useState("");
     const [comments, setComments] = useState<commentType[]>([]);
@@ -29,16 +29,10 @@ const SubmissionPreview = ({ session }: { session: Session }) => {
     useEffect(() => {
         getComments()
         getSubmissionDetails()
-    }, [comment]);
 
-    // useEffect(() => {
-    //     if (status === "false") {
-    //         setSubmissionStatus("Ongoing");
-    //     } else {
-    //         setSubmissionStatus("Done");
-    //     }
-    // }, [status]);
+    }, []);
 
+    
     const getSubmissionDetails = async() => {
         try {
             if (id !== null || id !== "") {
@@ -172,16 +166,23 @@ const SubmissionPreview = ({ session }: { session: Session }) => {
                         <View style={styles.cardheading}>
                             <Text style={styles.cardtitle}>Submission #{submission?.number} </Text>
                         </View>
-                        <Text style={styles.cardtitle}>Status: {submission?.status ? "Submitted" : submission?.verified ? "Confirmed" : "Pending"}</Text>
+                        <Text style={styles.cardtitle}>Status: {submission?.status && !submission.verified ? "Submitted" : submission?.verified && submission.status? "Confirmed" : "Pending"}</Text>
                         <View style={styles.cardheading}>
                             <Text style={styles.cardsubtitle}>{submission?.deadline}</Text>
                         </View>
                         <Text style={styles.description}>Placeholder description</Text>
-                        <Link href={{ pathname: "/videoviewer", params:{videoId: submission?.videopath, submissionid: submission?.id, patientid: submission?.patientid}}} style={styles.button}>
+                        {!submission?.verified ?(
+                            <Link href={{ pathname: "/videoviewer", params:{videoId: submission?.videopath, submissionid: submission?.id, patientid: submission?.patientid}}} style={styles.button}>
                             <TouchableOpacity>
                                 <Text style={styles.buttontext}>Verify Submission</Text>
                             </TouchableOpacity>
-                        </Link>
+                            </Link>
+                        ): (
+                            <TouchableOpacity>
+                                <Text style={styles.buttontext}>Already Verified</Text>
+                            </TouchableOpacity>
+                        )}  
+                      
                     </View>
                 
                     <View style={styles.divider}></View>

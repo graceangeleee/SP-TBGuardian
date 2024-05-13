@@ -11,13 +11,14 @@ const MissingList = () => {
     const renderList = ({item}: {item: submissionType}) => <SubmissionCard content = {item} type="Missing" smsAvailable={smsAvailable}/> 
 
     useEffect(()=> {
+        missing?.sort((a,b)=> a.number - b.number)
         checkSMS()
     }, [])
 
     const checkSMS = async () => {
-        const isAailable = await SMS.isAvailableAsync();
+        const isAvailable = await SMS.isAvailableAsync();
 
-        if(isAailable) setSMSAvailable(true)
+        if(isAvailable) setSMSAvailable(true)
     }
 
    
