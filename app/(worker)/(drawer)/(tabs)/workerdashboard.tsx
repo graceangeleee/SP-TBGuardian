@@ -1,4 +1,3 @@
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import React from 'react';
 import { useState, useEffect } from "react";
@@ -10,149 +9,10 @@ import { useWorkerData } from '../../_layout';
 import { FontAwesome } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 
-
-
 export default function WorkerDashboard({session}: {session: Session}) {
     const[loading, setLoading] = useState(false);
-    const {monitoring, done, missing, setMonitoring, setMissing, setDone, unverified, setUnverified, userid, user, setUser} = useWorkerData();
+    const {monitoring, verified, unverified, done, missing} = useWorkerData()
     
-    useEffect(()=> {
-        getDashboardData()
-    }, [session])
-
-    async function getDashboardData(){
-        setLoading(true)
-        await Promise.all([getMonitoring(), getDone(), getMissing(), getUnverified(), getUser()]);
-        setLoading(false);
-    }
-
-async function getMonitoring(){
-    setLoading(true)
-     try{
-         const { data, error, status } = await supabase
-         .from('users')
-         .select()
-         .eq("status", "FALSE")
-
-         if(error && status !== 406){
-             throw error;
-         }
- 
-         if(data){
-             setMonitoring(data);
-         }
-     }catch (error){
-         if(error instanceof Error){
-             Alert.alert(error.message)
-         }
-     }finally{
-         setLoading(false)
-     }
- }
-
-async function getDone(){
-    setLoading(true)
-    try{
-        const { data, error, status } = await supabase
-        .from('users')
-        .select()
-        .eq("status", "TRUE")
-
-        if(error && status !== 406){
-            throw error;
-        }
-
-        if(data){
-            setDone(data);
-        }
-    }catch (error){
-        if(error instanceof Error){
-            Alert.alert(error.message)
-        }
-    }finally{
-        setLoading(false)
-    }
-}
-
-async function getMissing(){
-    setLoading(true)
-    const date = new Date().toISOString();
-
-    try{
-        const { data, error, status } = await supabase
-        .from('submissions')
-        .select()
-        .eq("status", "FALSE")
-        .lt("deadline", date)
-
-        if(error && status !== 406){
-            throw error;
-        }
-
-        if(data){
-            setMissing(data);
-        }
-    }catch (error){
-        if(error instanceof Error){
-            Alert.alert(error.message)
-        }
-    }finally{
-        setLoading(false)
-    }
-}
-
-async function getUnverified(){
-    setLoading(true)
-    const date = new Date().toISOString();
-
-    try{
-        const { data, error, status } = await supabase
-        .from('submissions')
-        .select()
-        .eq("status", "TRUE")
-        .eq("verified", "FALSE")
-
-        if(error && status !== 406){
-            throw error;
-        }
-
-        if(data){
-            setUnverified(data)
-        }
-    }catch (error){
-        if(error instanceof Error){
-            Alert.alert(error.message)
-        }
-    }finally{
-        setLoading(false)
-    }
-}
-
-const getUser = async () => {
-    const userid = await SecureStore.getItem("id")
-    try{
-        if (userid === null || userid === "") {
-            throw new Error('No user logged in');
-        } else {
-            const { data, error, status } = await supabase
-                .from('users')
-                .select()
-                .eq('id', userid)
-                .single();
-            
-            if(data){
-                setUser(data)
-            }
-        }
-    }catch (error) {
-        if (error instanceof Error) {
-            Alert.alert(error.message);
-        }
-    } finally {
-        return
-    }
-}
-
 
   return (
     <View>
@@ -177,35 +37,33 @@ const getUser = async () => {
 
  
                 <View style={{flexDirection: 'row', alignContent: 'space-between', marginTop: -10, marginBottom: -10}}>
-                    <View style={[styles.card, {backgroundColor: Palette.buttonOrLines}]}>
+                <View style={[styles.card, {backgroundColor: Palette.buttonOrLines}]}>
+                    <View style={{flexDirection: 'column', justifyContent: 'space-between', flex: 1}}>
                         <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                            <FontAwesome style={{flex: 1}} name="tasks" size={24} color="white" />
+                            <FontAwesome name="tasks" size={24} color="white" />
                             <Text style={styles.cardtitle}>Unverified Submissions</Text>
-                            
-                                
                         </View>
                         <Text style={styles.cardcontent}>
-                                    There are {unverified?.length} unverified submssions
+                            There are {unverified?.length} unverified submissions
                         </Text>
-                        <View style={[{backgroundColor: Palette.accent}, styles.button]}>
-                            <Link href={{pathname: "/unverified"}} style={{alignSelf: 'center'}}>
-                                {/* <TouchableOpacity> */}
-                                    <Text style={styles.buttontext}>See submissions</Text>
-                                {/* </TouchableOpacity> */}
-                            </Link>
-                        </View>
-                      
                     </View>
+                    <View style={[{backgroundColor: Palette.accent}, styles.button]}>
+                        <Link href={{pathname: "/dailysubmissions"}} style={{alignSelf: 'center'}}>
+                            <Text style={styles.buttontext}>See submissions</Text>
+                        </Link>
+                    </View>
+                </View>
                     <View style={[styles.card, {backgroundColor: Palette.accent}]}>
-                        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                            <FontAwesome style={{flex: 1}} name="calendar" size={24} color="white" />
-                            <Text style={styles.cardtitle}>Calendar</Text>
+                        <View style={{flexDirection: 'column', justifyContent: 'space-between', flex: 1}}>
+                            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                                <FontAwesome name="calendar" size={24} color="white" />
+                                <Text style={styles.cardtitle}>Calendar</Text>
+                            </View>
+                            {/* Your content here */}
                         </View>
                         <View style={[{backgroundColor: Palette.buttonOrLines}, styles.button]}>
                             <Link href={{pathname: "/workerschedule"}} style={{alignSelf: 'center'}}>
-                                {/* <TouchableOpacity> */}
-                                    <Text style={styles.buttontext}>See schedule</Text>
-                                {/* </TouchableOpacity> */}
+                                <Text style={styles.buttontext}>See schedule</Text>
                             </Link>
                         </View>
                     </View>
@@ -404,7 +262,7 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         flex: 1,
         margin: 10,
-        height: 230,
+        height: 200,
         borderColor: Palette.background,
         borderWidth: 2,
         padding: 15

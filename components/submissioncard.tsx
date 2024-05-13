@@ -92,7 +92,27 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({content, type, smsAvaila
                     <></>
                 )}
                
-                <Link href={{pathname:"/submissionpreview", params: {id: content.id}}}>
+                <Link href={{pathname:"/submissionpreview", params: {id: content.id, type: type}}}>
+                    <TouchableOpacity style={styles.button}>
+                        <Text style={styles.buttontext}>View Submission Bin</Text>
+                    </TouchableOpacity>
+                </Link>
+              
+            </TouchableOpacity>
+        ): !loading && type==="Verified" ? (
+            <TouchableOpacity style={styles.container}>
+                {user !== undefined ? (
+                    <>
+                    <Text style={styles.name}>{user.firstname} {user.lastname}</Text>
+                    <Text style={styles.details}>{user.address}</Text>
+                    <Text style={styles.details}>{user.contact_number}   |   {user.email}</Text>
+                    <Text style={styles.details}>Deadline: {content.deadline.toString()}</Text>
+                    </>
+                ):(
+                    <></>
+                )}
+               
+                <Link href={{pathname:"/submissionpreview", params: {id: content.id, type: type}}}>
                     <TouchableOpacity style={styles.button}>
                         <Text style={styles.buttontext}>View Submission Bin</Text>
                     </TouchableOpacity>

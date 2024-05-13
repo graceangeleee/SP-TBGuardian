@@ -1,27 +1,52 @@
-import { View, Text, ScrollView, Alert, Image, StyleSheet, SafeAreaView } from "react-native";
+import { View, Text, ScrollView, Alert, Image, StyleSheet, SafeAreaView, ActivityIndicator } from "react-native";
 import { useEffect, useState } from "react";
-import Palette from "../../../../Constants/Palette";
-import { Session } from "@supabase/supabase-js";
-import ProfileDetails from "../../../../components/profiledetails";
-import { useUserData } from "../../_layout";
+import Palette from "../../Constants/Palette";
+import ProfileDetails from "../../components/profiledetails";
 import { Link } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
+import { userType } from "../../Constants/Types";
+import { supabase } from "../../supabase";
 
-export default function Profile({ session }: { session: Session }) {
-    const {user} = useUserData();
-    const [loading, setLoading] = useState(false);
+export default function Profile() {
+    const params = useLocalSearchParams()
+    const { patientid } = params 
+    const [patient, setPatient] = useState<userType>();
+    const [loading, setLoading] = useState(false)
     const [age, setAge] = useState(0);
     const [birthdaystring, setBirthdayString] = useState("")
     
     useEffect(() => {
-        if (user) {
+        getPatientDetails()
+        if (patient) {
             calculateAge();
         }
-    }, [user]);
+    }, [patient]);
+
+    const getPatientDetails = async () => {
+        setLoading(true)
+        try{
+            const {data, error} = await supabase
+            .from('users')
+            .select()
+            .eq('id', patientid)
+            .single()
+
+            if(error){
+                console.log(error)
+            }else{
+                setPatient(data)
+            }
+        }catch(error){
+            if(error instanceof Error) Alert.alert(error.message)
+        }finally{
+            setLoading(false)
+        }
+    }
 
     const calculateAge = async() => {
         setLoading(true)
-        if(user){
-            const newBirthday = new Date(user.birthday)
+        if(patient){
+            const newBirthday = new Date(patient.birthday)
             setBirthdayString(newBirthday.toDateString())
             const currentDate = new Date();
             const difference = currentDate.getTime() - newBirthday.getTime();
@@ -33,31 +58,31 @@ export default function Profile({ session }: { session: Session }) {
 
     return (
         <View style={{ flex: 1, backgroundColor: Palette.accent }}>
-            {!loading && user && (
+            {!loading && patient ? (
                 <View>
                     <View style={styles.header}>
                         <Image style={styles.image} source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' }} />
-                        <Text style={styles.name}>{user?.firstname} {user?.lastname}</Text>
-                        <Text style={styles.number}>{user?.contact_number}</Text>
-                        <Text style={styles.number}>{user?.email}</Text>
-                        <Link href = {{pathname: "/changepassword"}}>
-                            <Text style={{textDecorationLine: 'underline', fontFamily: 'Poppins', fontSize: 16}}>Change password?</Text>
-                        </Link>
+                        <Text style={styles.name}>{patient?.firstname} {patient?.lastname}</Text>
+                        <Text style={styles.number}>{patient?.contact_number}</Text>
+                        <Text style={styles.number}>{patient?.email}</Text>
+            
                     </View>
                     <ScrollView style={styles.details}>
                         <ProfileDetails title="Program" detail={"Placeholder program"} />
                         <ProfileDetails title="Assigned DOTS Center" detail={"Placeholder center"} />
                         <ProfileDetails title="Age" detail={age.toString()} />
-                        <ProfileDetails title="Gender" detail={user?.gender} />
+                        <ProfileDetails title="Gender" detail={patient?.gender} />
                         <ProfileDetails title="Blood Type" detail={"AB-"} />
-                        <ProfileDetails title="Height" detail={`${user?.height} cm`} />
-                        <ProfileDetails title="Weight" detail={`${user?.weight} kg`} />
+                        <ProfileDetails title="Height" detail={`${patient?.height} cm`} />
+                        <ProfileDetails title="Weight" detail={`${patient?.weight} kg`} />
                         
                         <ProfileDetails title="Date of Birth" detail={birthdaystring} />
                
-                        <ProfileDetails title="Address" detail={user?.address} />
+                        <ProfileDetails title="Address" detail={patient?.address} />
                     </ScrollView>
                 </View>
+            ):(
+                <ActivityIndicator/>
             )}
         </View>
     );

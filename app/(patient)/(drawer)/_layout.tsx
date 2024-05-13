@@ -126,7 +126,7 @@ const PatientDrawerContent: React.FC<any> = (props) => {
 
 const DrawerLayout: React.FC = () => {
   return (
-  <Drawer drawerContent={(props) => <PatientDrawerContent {...props} />} />
+  <Drawer screenOptions={{headerTitle: "", headerStatusBarHeight: 0}} drawerContent={(props) => <PatientDrawerContent {...props} />} />
   )
 };
 

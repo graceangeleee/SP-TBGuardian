@@ -17,7 +17,7 @@ interface NewComment {
     submissionid: string | string[] | undefined
 }
 
-const SubmissionBin = ({ session }: { session: Session }) => {
+const SubmissionBin = () => {
     const params = useLocalSearchParams();
     const {status, id } = params;
     const [submissionstatus, setSubmissionStatus] = useState("");
@@ -29,7 +29,7 @@ const SubmissionBin = ({ session }: { session: Session }) => {
 
     useEffect(() => {
         getComments()
-    }, [comment]);
+    }, [pending]);
 
     useEffect(() => {
         if (status === "false") {

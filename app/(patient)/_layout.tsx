@@ -51,8 +51,8 @@ export default function Layout() {
 
   return (
     <UserDataProvider>
-      <Stack>
-        <Stack.Screen name="(drawer)" options={{headerShown: false}} initialParams={{usertype: "patient"}} />
+       <Stack screenOptions={{headerShown: false}}>
+        {/* <Stack.Screen name="(drawer)" options={{headerShown: false}} initialParams={{usertype: "patient"}} /> */}
         {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
         {/* <Stack.Screen name="addpatient" options={{headerTitle: "Add Patient", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines}}/> */}
         <Stack.Screen name="submissionbin" options={{headerBackTitle:"Back", headerTitle: "Submission Bin"}}/>

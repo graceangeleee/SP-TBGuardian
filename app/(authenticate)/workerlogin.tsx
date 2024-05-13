@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, Button, Pressable, View, Text, Alert, AppState} from 'react-native';
+import { StyleSheet, TextInput, Button, Pressable, View, Text, Alert, AppState, ActivityIndicator} from 'react-native';
 import { useState, useEffect } from 'react';
 import Palette from '../../Constants/Palette';
 import { router } from 'expo-router';
@@ -49,7 +49,7 @@ import * as SecureStore from 'expo-secure-store';
                 // console.log(data)
                 // console.log("Logged in");
                 await SecureStore.setItem("id", data.session.user.id)
-                router.replace("/(worker)");
+                router.replace("/(worker)/(tabs)/workerdashboard");
             }else{
                 Alert.alert("Please enter correct email and password")
             }
@@ -78,9 +78,17 @@ import * as SecureStore from 'expo-secure-store';
                 placeholder='Password' 
                 secureTextEntry={true}
                 onChangeText={setPassword}/>
-            <Pressable onPress={signInWithEmail} style={styles.loginbutton}>
-                <Text style={{color: 'white', fontSize: 16, fontFamily: 'Poppins'}}>Login</Text>
-            </Pressable>
+            {loading? (
+                <View style={styles.loginbutton}>
+                    <ActivityIndicator/>
+                </View>
+            ): (
+                <Pressable onPress={signInWithEmail} style={styles.loginbutton}>
+                
+                    <Text style={{color: 'white', fontSize: 16, fontFamily: 'Poppins'}}>Login</Text>
+                </Pressable>
+            )}
+           
         </View>
         <View style={styles.footer}></View>
       </View>
