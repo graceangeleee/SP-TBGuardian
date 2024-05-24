@@ -7,7 +7,7 @@ import { TextInput } from "react-native";
 import { useState } from "react";
 
 const PatientCardList = () => {
-    const {monitoring, done, missing, setMonitoring, setMissing, setDone} = useWorkerData();
+    const {monitoring, done, setMonitoring, setDone} = useWorkerData();
     const params = useLocalSearchParams();
     const { type } = params;
     const [search, setSearch] = useState("")

@@ -1,8 +1,15 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { 
+    Entypo 
+} from '@expo/vector-icons';
 import { Link, Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
-import Palette from '../../../../Constants/Palette';
+import Palette from '../../../Constants/Palette';
+import { Pressable } from 'react-native';
+import { supabase } from '../../../supabase';
+import { router } from 'expo-router';
+ import * as SecureStore from 'expo-secure-store';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
@@ -16,6 +23,24 @@ export default function TabLayout() {
   
     const colorScheme = useColorScheme();
 
+    const signOut = async () => {
+        console.log("Clicked")
+        try {
+            const { error } = await supabase.auth.signOut();
+    
+            if (error) {
+                throw error;
+            }
+    
+            // Sign-out successful
+            router.replace("/(authenticate)/userchoice")
+            await SecureStore.deleteItemAsync("id");
+            console.log('User signed out successfully');
+        } catch (error) {
+            if(error instanceof Error) console.error('Error signing out:', error.message);
+        }
+    };
+
 
   return (
 
@@ -27,15 +52,25 @@ export default function TabLayout() {
       }}
       >
       <Tabs.Screen
-        name="workerdashboard"
+        name="admindashboard"
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-          
+          headerShown: true, 
+           headerRight: () => (
+            
+              <Pressable onPress={() => signOut()}>
+                {({ pressed }) => ( 
+                  <Entypo name="log-out" size={20} color="black"  style={{marginRight: 10}}/>
+                )}
+              
+              </Pressable>
+        
+          ),
         }}
       />
       <Tabs.Screen
-        name="workerprofile"
+        name="adminprofile"
         options={{
           title: 'Profile',
           headerShown: false,

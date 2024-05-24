@@ -3,8 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../supabase";
 import { Text, TextInput, SafeAreaView, Pressable, View, Button, Alert, ScrollView, TouchableOpacity, StyleSheet, Platform, ActivityIndicator } from "react-native";
 import React from "react";
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { SelectList } from "react-native-dropdown-select-list";
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';import { SelectList } from "react-native-dropdown-select-list";
 import Palette from "../../Constants/Palette";
 import { router } from "expo-router";
 import * as SecureStore from 'expo-secure-store';
@@ -41,16 +40,55 @@ const AddPatient = () => {
     const [registrationGroup, setRegistrationGroup] = useState("")
     const [dateStarted, setDateStarted] = useState(new Date())
     const [tosubmit, setToSubmit] = useState(0)
-
+    const [workerArray, setWorkerArray] = useState<{ key: string; value: string; }[]>([]);
+    const [selectedWorker, setSelectedWorker] = useState("")
+    const [workers, setWorkers]= useState<userType[]>([])
 
     const genderArray = [{key: "Male", value: "Male"}, {key: "Female", value: "Female"}]
     const diseaseClassArray = [{key: "Pulmoanary", value: "Pulmonary"}, {key: "Non-Pulmonary", value: "Non-Pulmonary"}]
     const regimenArray = [{key: "Cat1", value: "Cat1"}, {key: "Cat2", value: "Cat2"}]
     const registrationGroupArray = [{key: "New", value: "New"}, {key: "Relapse", value: "Relapse"}, {key: "TALF", value: "TALF"}, 
         {key: "Treatment After Failure", value: "Treatment After Failure"}, {key: "PTOU", value: "PTOU"}, {key: "Other", value: "Other"}, {key: "Transfer-in", value: "Transfer-in"}]
+    let modifiedArray = []
+
+    useEffect(() => {
+        getWorkers()
+      
+    }, [])
 
 
-   
+
+
+    const getWorkers = async()=> {
+      
+        setLoading(true)
+        try{
+            const { data, error, status } = await supabase
+            .from('users')
+            .select()
+            .eq("usertype", "Worker")
+
+            if(error && status !== 406){
+                throw error;
+            }
+    
+            if(data){
+
+                setWorkers(data);
+                modifiedArray = data.map(obj => ({
+                    key: `${obj.id}`,
+                    value: `${obj.firstname} ${obj.lastname}`
+                    }));
+                    setWorkerArray(modifiedArray);
+                 }
+        }catch (error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
+        }finally{
+            setLoading(false)
+        }
+    }
 
     
     const toggleDatePicker = () => {
@@ -85,6 +123,36 @@ const AddPatient = () => {
           }
     }
 
+
+    const handleBirthdayChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        console.log(event.type)
+        if (event.type === 'set' && selectedDate) {
+          setBirthday(selectedDate);
+          console.log(birthday)
+          toggleDatePicker()
+        } else {
+          cancelDateTime();
+        }
+    
+        if (Platform.OS === 'ios') {
+          toggleDatePicker();
+        }
+    };
+
+    const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        if (event.type === 'set' && selectedDate) {
+          setDateStarted(selectedDate);
+          toggleDatePicker()
+        } else {
+          cancelDateTime();
+        }
+    
+        if (Platform.OS === 'ios') {
+          toggleDatePicker();
+        }
+    };
+
+
     const weightValidation = (weight:string) => {
         if (decimalRegex.test(weight) || weight === '' || weight === '.') {
             setWeight(parseFloat(weight));
@@ -102,8 +170,6 @@ const AddPatient = () => {
             setAddressError("")
         }
     }
-
-
 
     const passwordValidation = (password: string) => {
         // Regular expressions to match a small letter, a capital letter, and a special character
@@ -150,34 +216,6 @@ const AddPatient = () => {
         }
       }
 
-      const handleBirthdayChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-        console.log(event.type)
-        if (event.type === 'set' && selectedDate) {
-          setBirthday(selectedDate);
-          console.log(birthday)
-          toggleDatePicker()
-        } else {
-          cancelDateTime();
-        }
-    
-        if (Platform.OS === 'ios') {
-          toggleDatePicker();
-        }
-    };
-
-    const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-        if (event.type === 'set' && selectedDate) {
-          setDateStarted(selectedDate);
-          toggleDatePicker()
-        } else {
-          cancelDateTime();
-        }
-    
-        if (Platform.OS === 'ios') {
-          toggleDatePicker();
-        }
-    };
-
       const signUp = async() => {
         setLoading(true)
         if(email && password){
@@ -190,7 +228,7 @@ const AddPatient = () => {
                 })
 
                 if(error){
-                    Alert.alert(error.message)
+                   Alert.alert(error.message)
                 }else{
                     if(data.session)setNewId(data.session.user.id)
                     setSignup(false)
@@ -205,7 +243,7 @@ const AddPatient = () => {
       }
 
       const updateUser = async () => {
-        const userid = await SecureStore.getItemAsync("id");
+      
         setLoading(true)
         if(firstname && lastname && gender && address && birthday && height && weight && cnumber ){
             try{
@@ -220,11 +258,11 @@ const AddPatient = () => {
                     weight: weight, 
                     address: address, 
                     contact_number:cnumber,
-                    status: "FALSE",
+                    status: false,
                     usertype: "Patient", 
-                    workerid: userid,
-                    to_submit: tosubmit,
+                    workerid: selectedWorker,
                     total: tosubmit,
+                    to_submit: tosubmit,
                     treatment_regimen: regimen,
                     disease_class: diseaseClass,
                     registration_group: registrationGroup,
@@ -233,9 +271,11 @@ const AddPatient = () => {
 
                 )
                 .eq("id", newId)
+
                 createSubmissionBins()
                 if(error){
                     Alert.alert("Failed to update user details")
+                    console.log(error.message)
                 }else{
                     Alert.alert("Successfully updated user details")
                 }
@@ -243,16 +283,18 @@ const AddPatient = () => {
             }catch(error){
                 if(error instanceof Error) Alert.alert(error.message)
             }finally{
-                router.replace('/workerdashboard')
+                router.replace('/admindashboard')
                 setLoading(false)
             }
         }
       }
 
       const createSubmissionBins = async() => {
-
         const userid = await SecureStore.getItem("id")
+        // Starting date
+ 
 
+        // Array to hold all insert promises
         const insertPromises = [];
 
         for (let i = 0; i < tosubmit; i++) {
@@ -303,11 +345,11 @@ const AddPatient = () => {
         };
 
         const toSubmitValidator = (tosubmit: number) => {
-        // Regular expression for Philippine phone numbers
-
-        if(tosubmit !== null || tosubmit !== "")
-            setToSubmit(tosubmit)
-        };
+            // Regular expression for Philippine phone numbers
+  
+            if(tosubmit !== null || tosubmit !== "")
+                setToSubmit(tosubmit)
+            };
     
 
     
@@ -345,8 +387,12 @@ const AddPatient = () => {
                 </View>
             ): (
                 <ScrollView>  
-          
-          <Text style={styles.label}>First Name:</Text>     
+                <Text style={styles.label}>Select a worker:</Text>
+                {workers !== null && (
+                    <SelectList data={workerArray} setSelected={setSelectedWorker} />
+                )}        
+
+                <Text style={styles.label}>First Name:</Text>     
                 <TextInput 
                 style={styles.inputfield}
                 placeholder="First Name"

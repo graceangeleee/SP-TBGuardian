@@ -37,7 +37,7 @@ export default function Profile({ session }: { session: Session }) {
 
 
     return (
-        <View style={{ flex: 1, backgroundColor: Palette.accent}    }>
+        <ScrollView style={{ flex: 1, backgroundColor: Palette.accent}    }>
             {loading ? (
                 <></>
             ) : (
@@ -57,11 +57,9 @@ export default function Profile({ session }: { session: Session }) {
                             <ProfileStatus title="Pending" detail={50}/>
                             <ProfileStatus title="Missing" detail={0}/>
                         </View> */}
-                        <ProfileDetails title="Program" detail={"Placeholder program"}/>
-                        <ProfileDetails title="Assigned DOTS Center" detail={"Placeholder center"}/>
+            
                         <ProfileDetails title="Age" detail={age.toString()}/>
                         <ProfileDetails title="Gender" detail={user?.gender}/>
-                        <ProfileDetails title="Blood Type" detail={"AB-"}/>
                         <ProfileDetails title="Height" detail={`${user?.height} cm`}/>
                         <ProfileDetails title="Weight" detail={`${user?.weight} kg`}/>
                         <ProfileDetails title="Date of Birth" detail={birthdaystring}/>
@@ -69,7 +67,7 @@ export default function Profile({ session }: { session: Session }) {
                     </ScrollView>
                 </View>
             )}
-        </View>
+        </ScrollView>
     );
 }
 

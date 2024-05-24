@@ -3,16 +3,14 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../supabase";
 import { Text, TextInput, SafeAreaView, Pressable, View, Button, Alert, ScrollView, TouchableOpacity, StyleSheet, Platform, ActivityIndicator } from "react-native";
 import React from "react";
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { SelectList } from "react-native-dropdown-select-list";
 import Palette from "../../Constants/Palette";
 import { router } from "expo-router";
 import * as SecureStore from 'expo-secure-store';
 import { userType } from "../../Constants/Types";
 
-
-
-const AddPatient = () => {
+const AddWorker = () => {
     const [firstname, setFirstname] = useState("");
     const [lastname, setLastname] = useState("");
     const [gender, setGender] = useState("");
@@ -36,23 +34,23 @@ const AddPatient = () => {
     const [loading, setLoading] = useState(false);
     const [signup, setSignup] = useState(true);
     const [newId, setNewId] = useState("")
-    const [diseaseClass, setDiseaseClass] = useState("")
-    const [regimen, setRegimen] = useState("")
-    const [registrationGroup, setRegistrationGroup] = useState("")
-    const [dateStarted, setDateStarted] = useState(new Date())
-    const [tosubmit, setToSubmit] = useState(0)
-
+    // const [diseaseClass, setDiseaseClass] = useState("")
+    // const [regimen, setRegimen] = useState("")
+    // const [registrationGroup, setRegistrationGroup] = useState("")
+    // const [dateStarted, setDateStarted] = useState(new Date())
+    // const [tosubmit, setToSubmit] = useState(0)
+    // const [workerArray, setWorkerArray] = useState<{ key: string; value: string; }[]>([]);
+    // const [selectedWorker, setSelectedWorker] = useState("")
+    // const [workers, setWorkers]= useState<userType[]>([])
 
     const genderArray = [{key: "Male", value: "Male"}, {key: "Female", value: "Female"}]
-    const diseaseClassArray = [{key: "Pulmoanary", value: "Pulmonary"}, {key: "Non-Pulmonary", value: "Non-Pulmonary"}]
-    const regimenArray = [{key: "Cat1", value: "Cat1"}, {key: "Cat2", value: "Cat2"}]
-    const registrationGroupArray = [{key: "New", value: "New"}, {key: "Relapse", value: "Relapse"}, {key: "TALF", value: "TALF"}, 
-        {key: "Treatment After Failure", value: "Treatment After Failure"}, {key: "PTOU", value: "PTOU"}, {key: "Other", value: "Other"}, {key: "Transfer-in", value: "Transfer-in"}]
-
-
-   
+    // const diseaseClassArray = [{key: "Pulmoanary", value: "Pulmonary"}, {key: "Non-Pulmonary", value: "Non-Pulmonary"}]
+    // const regimenArray = [{key: "Cat1", value: "Cat1"}, {key: "Cat2", value: "Cat2"}]
+    // const registrationGroupArray = [{key: "New", value: "New"}, {key: "Relapse", value: "Relapse"}, {key: "TALF", value: "TALF"}, 
+    //     {key: "Treatment After Failure", value: "Treatment After Failure"}, {key: "PTOU", value: "PTOU"}, {key: "Other", value: "Other"}, {key: "Transfer-in", value: "Transfer-in"}]
 
     
+   
     const toggleDatePicker = () => {
         if(showDatePicker){
             setShowDatePicker(false)
@@ -71,6 +69,7 @@ const AddPatient = () => {
         }
     }
 
+    
     const cancelDateTime = () => {
         setShowDatePicker(false)
     }
@@ -103,8 +102,6 @@ const AddPatient = () => {
         }
     }
 
-
-
     const passwordValidation = (password: string) => {
         // Regular expressions to match a small letter, a capital letter, and a special character
         const smallRegex = /[a-z]/;
@@ -126,10 +123,16 @@ const AddPatient = () => {
       };
 
       const birthdayHandler = (event: any, selectedDate?: Date) => {
-        if (selectedDate !== undefined) {
+        if (event.type === 'set' && selectedDate) {
             setBirthday(selectedDate);
-            setShowDatePicker(false); // Assuming you have setShowDatePicker defined elsewhere
-        }
+            toggleDatePicker()
+          } else {
+            cancelDateTime();
+          }
+      
+          if (Platform.OS === 'ios') {
+            toggleDatePicker();
+          }
     };
 
       const fnameValidator = (fname:string) => {
@@ -150,34 +153,6 @@ const AddPatient = () => {
         }
       }
 
-      const handleBirthdayChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-        console.log(event.type)
-        if (event.type === 'set' && selectedDate) {
-          setBirthday(selectedDate);
-          console.log(birthday)
-          toggleDatePicker()
-        } else {
-          cancelDateTime();
-        }
-    
-        if (Platform.OS === 'ios') {
-          toggleDatePicker();
-        }
-    };
-
-    const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-        if (event.type === 'set' && selectedDate) {
-          setDateStarted(selectedDate);
-          toggleDatePicker()
-        } else {
-          cancelDateTime();
-        }
-    
-        if (Platform.OS === 'ios') {
-          toggleDatePicker();
-        }
-    };
-
       const signUp = async() => {
         setLoading(true)
         if(email && password){
@@ -190,14 +165,14 @@ const AddPatient = () => {
                 })
 
                 if(error){
-                    Alert.alert(error.message)
+                    console.log(error)
                 }else{
                     if(data.session)setNewId(data.session.user.id)
                     setSignup(false)
                 }  
 
             }catch(error){
-                if(error instanceof Error)Alert.alert(error.message)
+                if(error instanceof Error)console.log(error.message)
             }finally{
                 setLoading(false)
             }
@@ -205,7 +180,7 @@ const AddPatient = () => {
       }
 
       const updateUser = async () => {
-        const userid = await SecureStore.getItemAsync("id");
+      
         setLoading(true)
         if(firstname && lastname && gender && address && birthday && height && weight && cnumber ){
             try{
@@ -221,19 +196,12 @@ const AddPatient = () => {
                     address: address, 
                     contact_number:cnumber,
                     status: "FALSE",
-                    usertype: "Patient", 
-                    workerid: userid,
-                    to_submit: tosubmit,
-                    total: tosubmit,
-                    treatment_regimen: regimen,
-                    disease_class: diseaseClass,
-                    registration_group: registrationGroup,
-                    date_started: dateStarted
+                    usertype: "Worker", 
                 },
 
                 )
                 .eq("id", newId)
-                createSubmissionBins()
+
                 if(error){
                     Alert.alert("Failed to update user details")
                 }else{
@@ -243,50 +211,13 @@ const AddPatient = () => {
             }catch(error){
                 if(error instanceof Error) Alert.alert(error.message)
             }finally{
-                router.replace('/workerdashboard')
+                router.replace('/admindashboard')
                 setLoading(false)
             }
         }
       }
 
-      const createSubmissionBins = async() => {
-
-        const userid = await SecureStore.getItem("id")
-
-        const insertPromises = [];
-
-        for (let i = 0; i < tosubmit; i++) {
-            // Clone the current date to avoid mutation issues
-            const submissionDate = new Date(dateStarted);
-            // Create the row to insert
-            const row = {
-            workerid: userid,
-            patientid: newId,
-            status: false,
-            number: i,
-            verified: false,
-            missing_reminder: false,
-            deadline_reminder: false,
-            deadline: submissionDate.toISOString().split('T')[0], // Format the date as YYYY-MM-DD
-            // Add other fields here as necessary
-            };
-
-            // Push the insert promise to the array
-            insertPromises.push(supabase.from('submissions').insert(row));
-
-            // Increment the date by one day
-            dateStarted.setDate(dateStarted.getDate() + 1);
-        }
-
-        // Execute all insert promises
-        try {
-            await Promise.all(insertPromises);
-            console.log('Inserted 168 rows successfully');
-        } catch (error) {
-            console.error('Error inserting rows:', error);
-        }
-      }
-
+    
 
       const numberValidator = (phoneNumber: string) => {
         // Regular expression for Philippine phone numbers
@@ -302,13 +233,7 @@ const AddPatient = () => {
         
         };
 
-        const toSubmitValidator = (tosubmit: number) => {
-        // Regular expression for Philippine phone numbers
 
-        if(tosubmit !== null || tosubmit !== "")
-            setToSubmit(tosubmit)
-        };
-    
 
     
     return(
@@ -345,8 +270,9 @@ const AddPatient = () => {
                 </View>
             ): (
                 <ScrollView>  
-          
-          <Text style={styles.label}>First Name:</Text>     
+               
+
+                <Text style={styles.label}>First Name:</Text>     
                 <TextInput 
                 style={styles.inputfield}
                 placeholder="First Name"
@@ -402,8 +328,8 @@ const AddPatient = () => {
                 <View style={[styles.inputfield, {alignItems: 'stretch', paddingVertical: 5}]}>
                     <SelectList boxStyles={{borderWidth: 0}} fontFamily="Poppins" data={genderArray} setSelected={setGender} /> 
                 </View>
-                
-                
+                {/* <Button title="Show Date Picker" onPress={() => setShowDatePicker(true)} />
+                */}
                 {/* {showDatePicker && (
                     <DateTimePicker
                     value={birthday}
@@ -412,29 +338,7 @@ const AddPatient = () => {
                     onChange={birthdayHandler}
                     />
                 )} */}
-                <Text style={styles.label}>Disease Classification:</Text>
-                <View style={[styles.inputfield, {alignItems: 'stretch', paddingVertical: 5}]}>
-                    <SelectList boxStyles={{borderWidth: 0}} fontFamily="Poppins" data={diseaseClassArray} setSelected={setDiseaseClass} /> 
-                </View>
-
-                <Text style={styles.label}>Treatment Regimen:</Text>
-                <View style={[styles.inputfield, {alignItems: 'stretch', paddingVertical: 5}]}>
-                    <SelectList boxStyles={{borderWidth: 0}} fontFamily="Poppins" data={regimenArray} setSelected={setRegimen} /> 
-                </View>
-
-                <Text style={styles.label}>Registration Group:</Text>
-                <View style={[styles.inputfield, {alignItems: 'stretch', paddingVertical: 5}]}>
-                    <SelectList boxStyles={{borderWidth: 0}} fontFamily="Poppins" data={registrationGroupArray} setSelected={setRegistrationGroup} /> 
-                </View>
-
-                <Text style={styles.label}>Number of treatment days:</Text>
-                <TextInput 
-                style={styles.inputfield}
-                placeholder="Number of treatment days"
-                onChangeText={toSubmitValidator}
-                keyboardType="numeric"
-                />
-   
+ 
                 <Text style={styles.label}>Birthday:</Text>
                 <View style={styles.dateTimeContainer}>
             
@@ -442,7 +346,7 @@ const AddPatient = () => {
                     <TextInput
                         style={styles.inputfield}
                         value={birthday.toDateString()}
-                        placeholder={birthday.toDateString() !== "" ? birthday.toDateString() : "Birthday"}
+                        placeholder={birthday.toDateString() !== "" ? birthday.toDateString() : "Date Treatment Started"}
                         onPress={toggleDatePicker}
                     />
                     </Pressable>
@@ -451,31 +355,20 @@ const AddPatient = () => {
                         value={birthday || new Date()}
                         mode="date"
                         display={Platform.OS === "ios" ? "spinner" : "calendar"}
-                        onChange={handleBirthdayChange}
+                        onChange={(event: any, selectedDate?: Date) => {
+                        if (selectedDate) {
+                            setBirthday(selectedDate);
+                            if (Platform.OS === "ios") toggleDatePicker();
+                        } else {
+                            cancelDateTime(); // Cancel if date is not selected
+                        }
+                        }}
                     />
                     )}
                     </View>
 
-                <Text style={styles.label}>Date Started:</Text>
-                <View style={styles.dateTimeContainer}>
-            
-                    <Pressable onPress={toggleDatePicker}>
-                    <TextInput
-                        style={styles.inputfield}
-                        value={dateStarted.toDateString()}
-                        placeholder={dateStarted.toDateString() !== "" ? dateStarted.toDateString() : "Date Treament Started"}
-                        onPress={toggleDatePicker}
-                    />
-                    </Pressable>
-                    {showDatePicker && (
-                    <DateTimePicker
-                        value={birthday || new Date()}
-                        mode="date"
-                        display={Platform.OS === "ios" ? "spinner" : "calendar"}
-                        onChange={handleDateChange}
-                    />
-                    )}
-                    </View>
+
+               
 
                 {!loading ? (
                     <TouchableOpacity style={styles.button} onPress={updateUser}>
@@ -537,4 +430,4 @@ const styles = StyleSheet.create({
 })
 
 
-export default  AddPatient;
+export default AddWorker;

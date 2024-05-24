@@ -24,6 +24,7 @@ const SubmissionPreview = () => {
     const [comment, setComment] = useState("");
     const [comments, setComments] = useState<commentType[]>([]);
     const [submission, setSubmission] = useState<submissionType>();
+    const [videotaken, setVideoTaken] = useState("")
 
 
     useEffect(() => {
@@ -47,6 +48,8 @@ const SubmissionPreview = () => {
                 }
                 if (data) {
                     setSubmission(data);
+                    const taken = new Date(data.video_taken)
+                    setVideoTaken(taken.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }))
                 }
             } else {
                 Alert.alert("This submission bin does not exist");
@@ -160,23 +163,25 @@ const SubmissionPreview = () => {
         <ScrollView>
             {submission !== null && (
                 <View>
-                    <Text style={styles.title}>SUBMISSION DETAILS</Text>
-        
                     <View style={styles.card}>
                         <View style={styles.cardheading}>
                             <Text style={styles.cardtitle}>Submission #{submission?.number} </Text>
+                            <Text style={styles.cardtitle}>Status: {submission?.status && !submission.verified ? "Submitted" : submission?.verified && submission.status? "Confirmed" : "Pending"}</Text>
                         </View>
-                        <Text style={styles.cardtitle}>Status: {submission?.status && !submission.verified ? "Submitted" : submission?.verified && submission.status? "Confirmed" : "Pending"}</Text>
+                        
                         <View style={styles.cardheading}>
-                            <Text style={styles.cardsubtitle}>{submission?.deadline}</Text>
+                            <Text style={styles.cardsubtitle}>Deadline: {submission?.deadline}</Text>
+                            <Text style={styles.cardsubtitle}>Video Taken: {videotaken}</Text>
                         </View>
-                        <Text style={styles.description}>Placeholder description</Text>
+                        {/* <Text style={styles.description}>Placeholder description</Text> */}
                         {!submission?.verified ?(
-                            <Link href={{ pathname: "/videoviewer", params:{videoId: submission?.videopath, submissionid: submission?.id, patientid: submission?.patientid}}} style={styles.button}>
-                            <TouchableOpacity>
-                                <Text style={styles.buttontext}>Verify Submission</Text>
+                            
+                            <TouchableOpacity style={{ backgroundColor: Palette.accent, width: '95%', borderRadius: 20, marginTop: 10, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', padding: 10 }}>
+                                <Link href={{ pathname: "/videoviewer", params:{videoId: submission?.videopath, submissionid: submission?.id, patientid: submission?.patientid}}} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                    <Text style={styles.buttontext}>Verify Submission</Text>
+                                </Link>
                             </TouchableOpacity>
-                            </Link>
+                           
                         ): (
                             <TouchableOpacity>
                                 <Text style={styles.buttontext}>Already Verified</Text>
@@ -198,8 +203,6 @@ const SubmissionPreview = () => {
                         ))}
                     </View>
                     <View style={styles.input}>
-                        <FontAwesome6 style={{ flex: 1 }} name="paperclip" size={24} color="black" />
-                        <FontAwesome6 style={[styles.margin, { flex: 1 }]} name="image" size={24} color="black" />
                         <TextInput onChangeText={setComment} style={[styles.margin, { fontFamily: 'Poppins', flex: 6 }]} multiline={true} placeholder="Insert comment here" />
                         <FontAwesome onPress={addComment} style={{ flex: 1 }} name="send" size={24} color="black" />
                     </View>
@@ -218,27 +221,33 @@ const styles = StyleSheet.create({
         marginLeft: 20
     },
     card:{
-        backgroundColor: Palette.focused,
+        backgroundColor: Palette.buttonOrLines,
         borderRadius: 20,
         padding: 15,
         margin: 15
     },
     cardheading:{
         backgroundColor: 'transparent',
-        flexDirection: 'row',
+
+        justifyContent: 'space-between',
+        paddingHorizontal: 10
     },
     cardtitle:{
-        fontFamily: 'Heading',
+        fontFamily: 'Subheading',
         fontSize: 20,
+        color: 'white'
     },
     cardsubtitle:{
-        fontFamily: 'Heading',
+        fontFamily: 'Poppins',
         fontSize: 16,
+        color: 'white'
     },
     description:{
         marginTop: 15,
         fontFamily: 'Poppins',
-        fontSize: 16
+        fontSize: 16,
+        color: 'white',
+        paddingHorizontal: 10
     },
     button:{
         marginTop: 15,
@@ -250,8 +259,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     buttontext:{
-        fontFamily: 'Heading',
-        fontSize: 20
+        fontFamily: 'Poppins',
+        fontSize: 16,
+        textAlign: 'center',
+        alignSelf: 'center'
     },
     input:{
         flexDirection: 'row',

@@ -49,7 +49,8 @@ import * as SecureStore from 'expo-secure-store';
                 // console.log(data)
                 // console.log("Logged in");
                 await SecureStore.setItem("id", data.session.user.id)
-                router.replace("/(worker)/(tabs)/workerdashboard");
+                // router.replace("/(admin)/(tabs)/admindashboard");
+                getUserType(data.session.user.id)
             }else{
                 Alert.alert("Please enter correct email and password")
             }
@@ -61,6 +62,33 @@ import * as SecureStore from 'expo-secure-store';
         }
     }
     
+    const getUserType = async(id: string) => {
+        try{
+            const { data, error, status } = await supabase
+            .from('users')
+            .select()
+            .eq("id", id)
+            .single()
+
+            if(error && status !== 406){
+                throw error;
+            }
+    
+            if(data){
+               if(data.usertype === "Worker"){
+                router.replace("/(worker)/(drawer)/(tabs)/workerdashboard");
+               }else if (data.usertype === "Admin"){
+                router.replace("/(admin)/(tabs)/admindashboard");
+               }else{
+                router.replace("/(patient)/(drawer)/(tabs)/patientdashboard");
+               }
+            }
+        }catch (error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
+        }
+    }
     
     return (
       <View style={styles.main}>
@@ -151,10 +179,3 @@ const styles = StyleSheet.create({
 })
   
 
-// export default function Login () {
-//     return (
-//         <View>
-
-//         </View>
-//     )
-// }

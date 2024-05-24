@@ -139,8 +139,6 @@ export default function Profile() {
     };
 
     const calculateAge = (birthday: string, date_started: string) => {
-
-          
             const newBirthday = new Date(birthday);
             setBirthdayString(newBirthday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
           

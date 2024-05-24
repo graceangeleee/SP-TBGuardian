@@ -2,8 +2,8 @@ import React from 'react';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { Drawer } from 'expo-router/drawer';
 import { router, usePathname, Redirect } from 'expo-router';
-import { useEffect } from 'react';
-import { Image, StyleSheet, View, Text } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Image, StyleSheet, View, Text, Alert } from 'react-native';
 import { FontAwesome,
          MaterialIcons,
          Entypo 
@@ -12,13 +12,107 @@ import Palette from '../../../Constants/Palette';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { supabase } from '../../../supabase';
 import * as SecureStore from 'expo-secure-store';
+import { useWorkerData } from '../_layout';
+
 
 const PatientDrawerContent: React.FC<any> = (props) => {
     const pathname = usePathname();
+    const [loading, setLoading]= useState(false);
+    const {monitoring, done, setMonitoring,  setDone,  userid, user, setUser, } = useWorkerData();
+      
 
     useEffect(() => {
-        console.log(pathname);
+      console.log(pathname);
     }, [pathname]);
+
+    useEffect(()=> {
+        getDashboardData()
+    }, [])
+
+
+    async function getDashboardData(){
+        setLoading(true)
+        await Promise.all([getMonitoring(), getDone(), getUser()]);
+        setLoading(false);
+    }
+
+      async function getMonitoring(){
+        const userid = await SecureStore.getItem("id")
+        setLoading(true)
+        try{
+            const { data, error, status } = await supabase
+            .from('users')
+            .select()
+            .eq("status", "FALSE")
+            .eq("workerid", userid)
+
+            if(error && status !== 406){
+                throw error;
+            }
+    
+            if(data){
+                setMonitoring(data);
+            }
+        }catch (error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
+        }finally{
+            setLoading(false)
+        }
+    }
+
+    async function getDone(){
+        const userid = await SecureStore.getItem("id")
+        setLoading(true)
+        try{
+            const { data, error, status } = await supabase
+            .from('users')
+            .select()
+            .eq("status", "TRUE")
+            .eq("workerid", userid)
+
+            if(error && status !== 406){
+                throw error;
+            }
+
+            if(data){
+                setDone(data);
+            }
+        }catch (error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
+        }finally{
+            setLoading(false)
+        }
+    }
+
+    
+    const getUser = async () => {
+        const userid = await SecureStore.getItem("id")
+        try{
+            if (userid === null || userid === "") {
+                throw new Error('No user logged in');
+            } else {
+                const { data, error, status } = await supabase
+                    .from('users')
+                    .select()
+                    .eq('id', userid)
+                    .single();
+                
+                if(data){
+                    setUser(data)
+                }
+            }
+        }catch (error) {
+            if (error instanceof Error) {
+                Alert.alert(error.message);
+            }
+        } finally {
+            return
+        }
+    }
 
 
     const signOut = async () => {
@@ -45,66 +139,20 @@ const PatientDrawerContent: React.FC<any> = (props) => {
       <View style={styles.drawerheader}>
         {/* <Image source={{uri: 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.svgrepo.com%2Fsvg%2F384674%2Faccount-avatar-profile-user-11&psig=AOvVaw1d2ih2wyOyQXGLeyjjqX0F&ust=1709887737656000&source=images&cd=vfe&opi=89978449&ved=0CBMQjRxqFwoTCMCtma3i4YQDFQAAAAAdAAAAABAJ'}} height={80} width={80}/> */}
         <FontAwesome name="user-circle" size={100} color="white" />
-        <Text style={styles.name}>Placeholder Name</Text> 
+        <Text style={styles.name}>{user?.firstname} {user?.lastname}</Text> 
       </View>
       <DrawerItem
         label={'Profile'}
         icon={({ color, size }) => (
-            <FontAwesome name="user-circle" size={30} color={pathname == "/profile" ? Palette.buttonOrLines : 'white'} />
+            <FontAwesome name="user-circle" size={30} color={pathname == "/workerprofile" ? Palette.buttonOrLines : 'white'} />
         )}
-        labelStyle={[styles.drawerLabel, {color: pathname == "/profile" ? Palette.buttonOrLines : 'white'}]}
-        style={{backgroundColor: pathname == "/profile" ? Palette.shadowAccent : Palette.buttonOrLines}}
+        labelStyle={[styles.drawerLabel, {color: pathname == "/workerprofile" ? Palette.buttonOrLines : 'white'}]}
+        style={{backgroundColor: pathname == "/workerprofile" ? Palette.shadowAccent : Palette.buttonOrLines}}
         onPress={() => {
-            router.push('/(drawer)/(tabs)/profile');
+            router.push('/(drawer)/(tabs)/workerprofile');
         }}
       />
-
-      <DrawerItem
-        label={'History'}
-        onPress={() => {
-          router.push('/(drawer)/(tabs)/history');
-        }}
-        icon={({ color, size }) => (
-            <MaterialIcons name="history" size={30} color={pathname == "/history" ? Palette.buttonOrLines : 'white'} />
-        )}
-        labelStyle={[styles.drawerLabel, {color: pathname == "/history" ? Palette.buttonOrLines : 'white'}]}
-        style={{backgroundColor: pathname == "/history" ? Palette.shadowAccent : Palette.buttonOrLines}}
-      />
-      <DrawerItem
-        label={'Instructions'}
-        onPress={() => {
-          router.push('/(drawer)/(tabs)/instruction');
-        }}
-        icon={({color, size}) => (
-            <FontAwesome name="book" size={30} color={pathname == "/instruction" ? Palette.buttonOrLines : 'white'} />
-        )}
-        labelStyle={[styles.drawerLabel, {color: pathname == "/instruction" ? Palette.buttonOrLines : 'white'}]}
-        style={{backgroundColor: pathname == "/instruction" ? Palette.shadowAccent : Palette.buttonOrLines}}
-      />
-      <DrawerItem
-        label={'Rewards'}
-        onPress={() => {
-          router.push('/(drawer)/(tabs)/rewards');
-        }}
-        icon={({ color, size }) => (
-            <FontAwesome name="gift" size={30} color = {pathname == "/rewards" ? Palette.buttonOrLines : 'white'} />
-        )}
-        labelStyle={[styles.drawerLabel, {color: pathname == "/rewards" ? Palette.buttonOrLines : 'white'}]}
-        style={{backgroundColor: pathname == "/rewards" ? Palette.shadowAccent
-        
-         : Palette.buttonOrLines}}
-      />
-       <DrawerItem
-        label={'Settings'}
-        onPress={() => {
-          router.push('/(drawer)/(tabs)/settings');
-        }}
-        icon={({ color, size }) => (
-            <MaterialIcons name="settings" size={30} color = {pathname == "/settings" ? Palette.buttonOrLines : 'white'} />
-        )}
-        labelStyle={[styles.drawerLabel, {color: pathname == "/settings" ? Palette.buttonOrLines : 'white'}]}
-        style={{backgroundColor: pathname == "/settings" ? Palette.shadowAccent : Palette.buttonOrLines}}
-      />
+  
       <TouchableOpacity style={{backgroundColor: Palette.buttonOrLines, marginLeft: 20, flexDirection: 'row', alignItems: 'center'}} onPress={signOut}>
         <Entypo name="log-out" size={30} color="white" />
         <Text style={[styles.drawerLabel, {marginLeft: 10}]}>Log out</Text>
@@ -115,6 +163,7 @@ const PatientDrawerContent: React.FC<any> = (props) => {
 
 const DrawerLayout: React.FC = () => {
   return (
+    
   <Drawer screenOptions={{headerTitle: "", headerStatusBarHeight: 0}} drawerContent={(props) => <PatientDrawerContent {...props} />} />
   )
 };

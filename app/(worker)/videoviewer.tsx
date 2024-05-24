@@ -16,8 +16,6 @@ const VideoPlayer: React.FC = () => {
   const [loading, setLoading]  = useState<boolean>(true);
   const params = useLocalSearchParams();
   const {videoId, submissionid, patientid} = params;
-  const {setUnverified, setVerified} = useWorkerData()
-
 
   useEffect(() => {
     async function fetchVideoUrl() {
@@ -69,14 +67,15 @@ const VideoPlayer: React.FC = () => {
           if(error){
             if(error instanceof Error)console.log(error.message)
           }else{
-            getVerified()
-            getUnverified()
+
             Alert.alert("Successfully verified submission")
+
           }
         }
       }
 
-      router.replace('/submissionpreview')
+      router.navigate("/workerdashboard")
+      router.push("/dailysubmissions")
       
     }catch(error){
       if(error instanceof Error) console.log(error.message)
@@ -84,59 +83,59 @@ const VideoPlayer: React.FC = () => {
   }
 
 
-  async function getVerified(){
-    setLoading(true)
-    const date = new Date().toISOString();
+//   async function getVerified(){
+//     setLoading(true)
+//     const date = new Date().toISOString();
 
-    try{
-        const { data, error, status } = await supabase
-        .from('submissions')
-        .select()
-        .eq("status", "TRUE")
-        .eq("verified", "TRUE")
+//     try{
+//         const { data, error, status } = await supabase
+//         .from('submissions')
+//         .select()
+//         .eq("status", "TRUE")
+//         .eq("verified", "TRUE")
 
-        if(error && status !== 406){
-            throw error;
-        }
+//         if(error && status !== 406){
+//             throw error;
+//         }
 
-        if(data){
-            setVerified(data) 
-        }
-    }catch (error){
-        if(error instanceof Error){
-            Alert.alert(error.message)
-        }
-    }finally{
-        setLoading(false)
-    }
-}
+//         if(data){
+//             setVerified(data) 
+//         }
+//     }catch (error){
+//         if(error instanceof Error){
+//             Alert.alert(error.message)
+//         }
+//     }finally{
+//         setLoading(false)
+//     }
+// }
 
-async function getUnverified(){
-    setLoading(true)
-    const date = new Date().toISOString();
+// async function getUnverified(){
+//     setLoading(true)
+//     const date = new Date().toISOString();
 
-    try{
-        const { data, error, status } = await supabase
-        .from('submissions')
-        .select()
-        .eq("status", "TRUE")
-        .eq("verified", "FALSE")
+//     try{
+//         const { data, error, status } = await supabase
+//         .from('submissions')
+//         .select()
+//         .eq("status", "TRUE")
+//         .eq("verified", "FALSE")
 
-        if(error && status !== 406){
-            throw error;
-        }
+//         if(error && status !== 406){
+//             throw error;
+//         }
 
-        if(data){
-            setUnverified(data) 
-        }
-    }catch (error){
-        if(error instanceof Error){
-            Alert.alert(error.message)
-        }
-    }finally{
-        setLoading(false)
-    }
-}
+//         if(data){
+//             setUnverified(data) 
+//         }
+//     }catch (error){
+//         if(error instanceof Error){
+//             Alert.alert(error.message)
+//         }
+//     }finally{
+//         setLoading(false)
+//     }
+// }
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

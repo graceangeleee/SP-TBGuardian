@@ -7,46 +7,44 @@ import Palette from "../../Constants/Palette";
 import { supabase } from "../../supabase";
 import * as SecureStore from 'expo-secure-store';
 
-
 const MissingList = () => {
-    const [smsAvailable, setSMSAvailable] = useState(false);
-    const [reminded, setReminded] = useState(false);
-    const [notReminded, setNotReminded] = useState(true);
-    const [missing, setMissing] = useState<submissionType[]>([]);
+    // const [smsAvailable, setSMSAvailable] = useState(false);
+    // const [reminded, setReminded] = useState(false);
+    // const [notReminded, setNotReminded] = useState(true);
+    const [submitted, setSubmitted] = useState<submissionType[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        getMissing();
-        checkSMS();
+        getSubmissions();
+
     }, []);
 
-    const checkSMS = async () => {
-        const isAvailable = await SMS.isAvailableAsync();
-        setSMSAvailable(isAvailable);
-    };
+    // const checkSMS = async () => {
+    //     const isAvailable = await SMS.isAvailableAsync();
+    //     setSMSAvailable(isAvailable);
+    // };
 
-    const toggleNotReminded = () => {
-        setNotReminded(true);
-        setReminded(false);
-    };
+    // const toggleNotReminded = () => {
+    //     setNotReminded(true);
+    //     setReminded(false);
+    // };
 
-    const toggleReminded = () => {
-        setReminded(true);
-        setNotReminded(false);
-    };
+    // const toggleReminded = () => {
+    //     setReminded(true);
+    //     setNotReminded(false);
+    // };
 
-    const getMissing = async () => {
+    const getSubmissions = async () => {
         setLoading(true);
         const date = new Date().toISOString();
-        const userid = await SecureStore.getItem("id")
-
+        const id = await SecureStore.getItemAsync("id");
         try {
             const { data, error, status } = await supabase
                 .from('submissions')
                 .select()
-                .eq("status", "FALSE")
-                .lt("deadline", date)
-                .eq("workerid", userid)
+                .eq("status", "TRUE")
+                .eq("patientid", id)
+  
 
             if (error && status !== 406) {
                 throw error;
@@ -54,7 +52,7 @@ const MissingList = () => {
 
             if (data) {
                 data.sort((a, b) => a.number - b.number);
-                setMissing(data);
+                setSubmitted(data);
             }
         } catch (error) {
             if (error instanceof Error) {
@@ -66,15 +64,15 @@ const MissingList = () => {
     };
 
     const renderList = ({ item }: { item: submissionType }) => (
-        <SubmissionCard content={item} type="Missing" smsAvailable={smsAvailable} updateData={getMissing} />
+        <SubmissionCard content={item} type="Patient Missing" updateData={getSubmissions} />
     );
 
-    const remindedData = missing.filter(item => item.missing_reminder);
-    const notRemindedData = missing.filter(item => !item.missing_reminder);
+    // const remindedData = missing.filter(item => item.missing_reminder);
+    // const notRemindedData = missing.filter(item => !item.missing_reminder);
 
     return (
         <>
-            <View style={styles.switchcontainer}>
+            {/* <View style={styles.switchcontainer}>
                 <TouchableOpacity
                     onPress={toggleNotReminded}
                     style={[
@@ -93,10 +91,10 @@ const MissingList = () => {
                 >
                     <Text style={styles.switchtext}>REMINDED</Text>
                 </TouchableOpacity>
-            </View>
+            </View> */}
             {!loading && (
                 <FlatList
-                    data={notReminded ? notRemindedData : remindedData}
+                    data={submitted}
                     renderItem={renderList}
                     keyExtractor={(item) => item.id}
                 />
