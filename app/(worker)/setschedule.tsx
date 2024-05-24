@@ -7,6 +7,7 @@ import Palette from "../../Constants/Palette";
 import { supabase } from "../../supabase";
 import * as SecureStore from 'expo-secure-store';
 import * as SMS from 'expo-sms';
+import { router } from "expo-router";
 
 interface NewSchedule {
   patientid: string;
@@ -47,49 +48,51 @@ const SetSchedule: React.FC = () => {
     setIsDirty(false); // Reset the dirty state
   }, []);
 
-  const sendSMS = async() => {
-    try{
-      const {data, error} = await supabase
-      .from('users')
-      .select('contact_number')
-      .eq('id', selectedPatient)
-      .single()
+  const sendSMS = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('contact_number')
+        .eq('id', selectedPatient)
+        .single();
 
-      if(error){
-        console.log("Patient not found")
-      }else{
-        const isAvailable = await SMS.isAvailableAsync()
-        if(isAvailable){
-          const {result} = await SMS.sendSMSAsync(data.contact_number, `AGENDA: You are scheduled for a face-to-face checkup at the TB DOTS Center on ${date?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} at ${time?.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`)
-          if(result === "sent")Alert.alert("Message sent succesfully")
-        }else{
-          Alert.alert("Messaging not available in this device")
+      if (error) {
+        console.log("Patient not found");
+      } else {
+        const isAvailable = await SMS.isAvailableAsync();
+        if (isAvailable) {
+          const { result } = await SMS.sendSMSAsync(
+            data.contact_number,
+            `AGENDA: You are scheduled for a face-to-face checkup at the TB DOTS Center on ${date?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} at ${time?.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}.`
+          );
+          if (result === "sent") Alert.alert("Message sent successfully");
+        } else {
+          Alert.alert("Messaging not available on this device");
         }
       }
-    }catch(error){
-      if(error instanceof Error) Alert.alert(error.message)
-    }finally{
-      return
+    } catch (error) {
+      if (error instanceof Error) Alert.alert(error.message);
     }
-  }
+  };
 
   const insertSchedule = async () => {
-    await sendSMS()
+    if (!selectedPatient || !date || !time) {
+      Alert.alert("Please complete all fields.");
+      return;
+    }
+
+    await sendSMS();
+
     const worker_id = await SecureStore.getItemAsync("id");
-    if (worker_id !== null && date !== undefined && time !== undefined) {
-      // const datestring = date.toLocaleDateString();
-      // const timestring = time.toLocaleTimeString();
-      const dateoptions = { month: 'long', day: 'numeric', year: 'numeric' };
-      const timeoptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+    if (worker_id !== null) {
       const newAgenda: NewSchedule = {
         workerid: worker_id,
         patientid: selectedPatient,
         text: notes,
-        date: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-        time: date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-
+        date: date.toISOString(),
+        // date: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        time: time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
       };
-
 
       try {
         const { data, error } = await supabase
@@ -98,9 +101,11 @@ const SetSchedule: React.FC = () => {
 
         if (error) {
           Alert.alert(error.message);
+        } else {
+          Alert.alert("Successfully booked a schedule");
+          router.navigate('/workerdashboard')
+          router.push('/workerschedule')
         }
-
-        Alert.alert("Successfully booked a schedule")
       } catch (error) {
         console.log("Error setting schedule:", error);
       }
@@ -108,7 +113,7 @@ const SetSchedule: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log("Rendered")
+    console.log("Rendered");
     if (monitoring !== null) {
       const modifiedArray = monitoring.map(obj => ({
         key: `${obj.id}`,
@@ -118,9 +123,8 @@ const SetSchedule: React.FC = () => {
     } else {
       setPatientArray([]);
     }
-  }, []);
+  }, [monitoring]);
 
-  
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Select a patient:</Text>
@@ -132,6 +136,7 @@ const SetSchedule: React.FC = () => {
         style={styles.input}
         placeholder="Enter notes"
         onChangeText={setNotes}
+        value={notes}
       />
       <View style={styles.dateTimeContainer}>
         <Text style={styles.label}>Select date:</Text>
@@ -140,6 +145,8 @@ const SetSchedule: React.FC = () => {
             style={styles.input}
             placeholder={date ? date.toDateString() : "Select date"}
             onPress={toggleDatePicker}
+            editable={false}
+            value={date ? date.toDateString() : ""}
           />
         </Pressable>
         {showDatePicker && (
@@ -148,9 +155,9 @@ const SetSchedule: React.FC = () => {
             mode="date"
             display={Platform.OS === "ios" ? "spinner" : "calendar"}
             onChange={(event: any, selectedDate?: Date) => {
-              if (selectedDate) {
+              if (event.type === "set") {
                 setDate(selectedDate);
-                if (Platform.OS === "ios") toggleDatePicker();
+                setShowDatePicker(false); // Dismiss the picker
               } else {
                 cancelDateTime(); // Cancel if date is not selected
               }
@@ -163,6 +170,8 @@ const SetSchedule: React.FC = () => {
             style={styles.input}
             placeholder={time ? time.toTimeString() : "Select time"}
             onPress={toggleTimePicker}
+            editable={false}
+            value={time ? time.toTimeString() : ""}
           />
         </Pressable>
         {showTimePicker && (
@@ -171,9 +180,9 @@ const SetSchedule: React.FC = () => {
             mode="time"
             display={Platform.OS === "ios" ? "spinner" : "default"}
             onChange={(event: any, selectedTime?: Date) => {
-              if (selectedTime) {
+              if (event.type === "set") {
                 setTime(selectedTime);
-                if (Platform.OS === "ios") toggleTimePicker();
+                setShowTimePicker(false); // Dismiss the picker
               } else {
                 cancelDateTime(); // Cancel if time is not selected
               }
@@ -202,7 +211,6 @@ const SetSchedule: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    height: 'auto',
     padding: 20,
   },
   label: {
@@ -216,6 +224,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 20,
     paddingHorizontal: 10,
+    backgroundColor: '#f9f9f9',
   },
   dateTimeContainer: {
     marginBottom: 20,

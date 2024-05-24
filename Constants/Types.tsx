@@ -13,6 +13,12 @@ export interface userType{
     email: string,
     to_submit: number,
     contact_number: string
+    workerid: string,
+    treatment_regimen: string,
+    disease_class: string,
+    registration_group: string,
+    date_started: Date,
+    total: number
 }
 
 export interface submissionType{
@@ -23,7 +29,12 @@ export interface submissionType{
     status: boolean,
     number: number,
     verified: boolean,
-    videopath: string
+    videopath: string,
+    missing_reminder: boolean,
+    deadline_reminder: boolean,
+    date_submitted: Date,
+    video_taken: Date,
+    workerid: string
 }
 
 export interface commentType{

@@ -1,21 +1,73 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import React from 'react';
 import { useState, useEffect } from "react";
-import Palette from '../../../../Constants/Palette';
+import Palette from '../../../Constants/Palette';
 import { Link } from "expo-router";
 import { Session } from '@supabase/supabase-js';
-import { supabase } from '../../../../supabase';
-import { useWorkerData } from '../../_layout';
-import { FontAwesome } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
-import { Calendar } from "react-native-calendars";
-import { agendaType } from '../../../../Constants/Types';
+import { supabase } from '../../../supabase';
+import { userType } from '../../../Constants/Types';
 
-export default function WorkerDashboard({session}: {session: Session}) {
+export default function AdminDashboard({session}: {session: Session}) {
     const[loading, setLoading] = useState(false);
-    const {monitoring, done} = useWorkerData()
     const [markedDates, setMarkedDates] = useState<{ [date: string]: { marked: boolean } }>({});
-    const [agenda, setAgenda] = useState<agendaType[]>([]);
+    const [patients, setPatients] = useState<userType[]>([])
+    const [workers, setWorkers] = useState<userType[]>([])
+
+    useEffect(() => {
+        getPatients()
+        getWorkers()
+    }, [])
+
+
+    const getPatients = async()=> {
+      
+        setLoading(true)
+        try{
+            const { data, error, status } = await supabase
+            .from('users')
+            .select()
+            .eq("usertype", "Patient")
+
+            if(error && status !== 406){
+                throw error;
+            }
+    
+            if(data){
+                setPatients(data);
+            }
+        }catch (error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
+        }finally{
+            setLoading(false)
+        }
+    }
+
+    const getWorkers = async()=> {
+      
+        setLoading(true)
+        try{
+            const { data, error, status } = await supabase
+            .from('users')
+            .select()
+            .eq("usertype", "Worker")
+
+            if(error && status !== 406){
+                throw error;
+            }
+    
+            if(data){
+                setWorkers(data);
+            }
+        }catch (error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
+        }finally{
+            setLoading(false)
+        }
+    }
 
     const onDayPress = () => {
 
@@ -32,50 +84,47 @@ export default function WorkerDashboard({session}: {session: Session}) {
                         <Text style={{flex: 4, fontFamily: 'Heading', fontSize: 20, alignSelf: 'center'}}>
                             Register a new patient?
                         </Text>
-                        <Link href="/addpatient" asChild style={{flex: 1, justifyContent: 'center'}}>
+                        <Link href="/admin_addpatient" asChild style={{flex: 1, justifyContent: 'center'}}>
                             <TouchableOpacity style={styles.addButton}>
                                 <Text style={styles.buttonText}>Add Patient</Text>
                             </TouchableOpacity>
                         </Link>
                     </View>
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between', alignContent: 'space-between'}}>
-                        <TouchableOpacity style={styles.buttonContainer}>
-                            <Link href={{pathname: '/dailysubmissions'}} >
-                                <Text style={styles.buttonText}>PATIENT SUBMISSIONS</Text>
-                            </Link>
-                        </TouchableOpacity>
-                        <View style={{flex: 1}}>
-                            <TouchableOpacity style={[styles.buttonContainer, {backgroundColor: Palette.accent}]}>
-                                <Link href={{pathname: '/duetoday'}}>
-                                    <Text style={styles.buttonText}>DUE TODAY</Text>
-                                </Link>
+                    <View style={{padding: 15, flexDirection: 'row'}}>
+                        <Text style={{flex: 4, fontFamily: 'Heading', fontSize: 20, alignSelf: 'center'}}>
+                            Register a new worker?
+                        </Text>
+                        <Link href="/admin_addworker" asChild style={{flex: 1, justifyContent: 'center'}}>
+                            <TouchableOpacity style={styles.addButton}>
+                                <Text style={styles.buttonText}>Add Worker</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.buttonContainer, {backgroundColor: Palette.darkGray}]}>
-                                <Link href={{pathname: '/missinglist'}}>
-                                    <Text style={styles.buttonText}>MISSING</Text>
-                                </Link>
-                            </TouchableOpacity>
-                        </View>
+                        </Link>
                     </View>
+                    
 
-                    <Link href={{pathname: "/patientcardlist",  params: {type: "Monitoring"}}} asChild style={[styles.cardContainer, {backgroundColor: Palette.focused}]}>
+                    <Link href={{pathname: "/admin_patients"}} asChild style={[styles.cardContainer, {backgroundColor: Palette.focused}]}>
                         <TouchableOpacity>
                             <View style={styles.cardContent}>
                                 <View style={styles.iconContainer}>
-                                    <Text style={styles.count}>{monitoring !== null ? monitoring.length : 0}</Text>
+                                    <Text style={styles.count}>{patients !== null ? patients.length : 0}</Text>
                                 </View> 
                                 <Text style={styles.dashboardText}>MONITORED PATIENTS</Text>
                             </View>
                         </TouchableOpacity>
                     </Link>
+
+                    <Link href={{pathname: "/admin_workers"}} asChild style={[styles.cardContainer, {backgroundColor: Palette.focused}]}>
+                        <TouchableOpacity>
+                            <View style={styles.cardContent}>
+                                <View style={styles.iconContainer}>
+                                    <Text style={styles.count}>{workers !== null ? workers.length : 0}</Text>
+                                </View> 
+                                <Text style={styles.dashboardText}>REGISTERED WORKERS</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </Link>
                     
-                    <View style={styles.calendarContainer}>
-                        <Link href={{pathname: "/workerschedule"}} asChild>
-                            <TouchableOpacity style={styles.buttonContainer}>
-                                <Text style={styles.dashboardText}>APPOINTMENTS</Text> 
-                            </TouchableOpacity>
-                        </Link>
-                    </View>
+
 
                 </ScrollView>
                 )

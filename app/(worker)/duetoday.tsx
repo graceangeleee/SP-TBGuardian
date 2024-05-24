@@ -8,15 +8,15 @@ import { supabase } from "../../supabase";
 import * as SecureStore from 'expo-secure-store';
 
 
-const MissingList = () => {
+const DueToday = () => {
     const [smsAvailable, setSMSAvailable] = useState(false);
     const [reminded, setReminded] = useState(false);
     const [notReminded, setNotReminded] = useState(true);
-    const [missing, setMissing] = useState<submissionType[]>([]);
+    const [duetoday, setDuetoday] = useState<submissionType[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        getMissing();
+        getDueToday()
         checkSMS();
     }, []);
 
@@ -35,17 +35,16 @@ const MissingList = () => {
         setNotReminded(false);
     };
 
-    const getMissing = async () => {
+    const getDueToday = async () => {
         setLoading(true);
         const date = new Date().toISOString();
         const userid = await SecureStore.getItem("id")
-
         try {
             const { data, error, status } = await supabase
                 .from('submissions')
                 .select()
                 .eq("status", "FALSE")
-                .lt("deadline", date)
+                .eq("deadline", date)
                 .eq("workerid", userid)
 
             if (error && status !== 406) {
@@ -54,8 +53,9 @@ const MissingList = () => {
 
             if (data) {
                 data.sort((a, b) => a.number - b.number);
-                setMissing(data);
+                setDuetoday(data);
             }
+            
         } catch (error) {
             if (error instanceof Error) {
                 Alert.alert(error.message);
@@ -66,11 +66,11 @@ const MissingList = () => {
     };
 
     const renderList = ({ item }: { item: submissionType }) => (
-        <SubmissionCard content={item} type="Missing" smsAvailable={smsAvailable} updateData={getMissing} />
+        <SubmissionCard content={item} type="Due Today" smsAvailable={smsAvailable} updateData={getDueToday} />
     );
 
-    const remindedData = missing.filter(item => item.missing_reminder);
-    const notRemindedData = missing.filter(item => !item.missing_reminder);
+    const remindedData = duetoday.filter(item => item.deadline_reminder);
+    const notRemindedData = duetoday.filter(item => !item.deadline_reminder);
 
     return (
         <>
@@ -122,4 +122,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default MissingList;
+export default DueToday;

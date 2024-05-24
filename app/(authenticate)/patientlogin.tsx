@@ -6,6 +6,7 @@ import { supabase } from '../../supabase';
 import * as SecureStore from 'expo-secure-store';
 
 
+
 // AppState.addEventListener('change', (state) => {
 //     if (state === 'active') {
 //       supabase.auth.startAutoRefresh()
@@ -20,6 +21,7 @@ import * as SecureStore from 'expo-secure-store';
     const [nameFocus, setNameFocus] = useState(false);
     const [passFocus, setPassFocus] = useState(false);
     const [loading, setLoading] = useState(false);
+    // const {session, setSession} = useUserData()
     
 
 
@@ -46,7 +48,9 @@ import * as SecureStore from 'expo-secure-store';
     
             if(data && data.session?.user.id){
                 await SecureStore.setItem("id", data.session.user.id)
-                router.replace("/(patient)/(drawer)/(tabs)/patientdashboard");
+                // setSession(data.session)
+                getUserType(data.session.user.id)
+                // router.replace("/(patient)/(drawer)/(tabs)/patientdashboard");
             }else{
                 Alert.alert("Please enter correct email and password")
             }
@@ -55,6 +59,34 @@ import * as SecureStore from 'expo-secure-store';
             Alert.alert("Please enter correct email and password");
         } finally {
             setLoading(false);
+        }
+    }
+
+    const getUserType = async(id: string) => {
+        try{
+            const { data, error, status } = await supabase
+            .from('users')
+            .select()
+            .eq("id", id)
+            .single()
+
+            if(error && status !== 406){
+                throw error;
+            }
+    
+            if(data){
+               if(data.usertype === "Worker"){
+                router.replace("/(worker)/(drawer)/(tabs)/workerdashboard");
+               }else if (data.usertype === "Admin"){
+                router.replace("/(admin)/(tabs)/admindashboard");
+               }else{
+                router.replace("/(patient)/(drawer)/(tabs)/patientdashboard");
+               }
+            }
+        }catch (error){
+            if(error instanceof Error){
+                Alert.alert(error.message)
+            }
         }
     }
     

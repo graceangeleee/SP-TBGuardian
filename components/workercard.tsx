@@ -4,43 +4,27 @@ import { userType } from "../Constants/Types";
 import Palette from "../Constants/Palette";
 import { Link } from "expo-router";
 
-interface PatientCardProps{
+interface WorkerCardProps{
     content:userType,
-    usertype?: string
 }
 
 
-const PatientCard: React.FC<PatientCardProps> = ({content, usertype}) => {
-    console.log(usertype)
+const WorkerCard: React.FC<WorkerCardProps> = ({content}) => {
     return(
-        <>
-        {usertype === "Admin" ? (
-        <Link href={{pathname: "/admin_patientprofile", params:{patientid: content.id}}} asChild>
+        <Link href={{pathname: "/admin_workerprofile", params:{workerid: content.id}}} asChild>
             <TouchableOpacity style={styles.container}>  
                 <View>
                     <Text style={styles.name}>{content.firstname} {content.lastname}</Text>
                     <Text style={styles.details}>{content.address}</Text>
                     <Text style={styles.details}>{content.contact_number}   |   {content.email}</Text>
-                    <Text style={styles.details}>Remaining Submissions: {content.to_submit}</Text>
+                    
                 </View>
             </TouchableOpacity>
-        </Link>) :
-        (<Link href={{pathname: "/patientprofile", params:{patientid: content.id}}} asChild>
-        <TouchableOpacity style={styles.container}>  
-            <View>
-                <Text style={styles.name}>{content.firstname} {content.lastname}</Text>
-                <Text style={styles.details}>{content.address}</Text>
-                <Text style={styles.details}>{content.contact_number}   |   {content.email}</Text>
-                <Text style={styles.details}>Remaining Submissions: {content.to_submit}</Text>
-            </View>
-        </TouchableOpacity>
-    </Link>)}
-        
-        </>
+        </Link>
     )
 }
 
-export default PatientCard;
+export default WorkerCard;
 
 const styles = StyleSheet.create({
     container:{

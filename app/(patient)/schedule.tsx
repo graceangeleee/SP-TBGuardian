@@ -18,18 +18,17 @@ const Schedule: React.FC = () => {
         getAgenda()
     }, [])
 
-
-
-
     const getAgenda = async () =>{
         setLoading(true)
+        const date = new Date().toISOString().split('T')[0];
         try{
             const userid = await SecureStore.getItem("id")
-
+            
             const{data, error, status} = await supabase
             .from('agenda')
             .select()
             .eq("patientid", userid)
+            .gt("date", date)
 
 
 
@@ -53,19 +52,19 @@ const Schedule: React.FC = () => {
     
     const renderList = ({item} : {item: agendaType}) => <AgendaCard id = {item.id} patientid={item.patientid} workerid={item.workerid} content={item.text} date={item.date} time={item.time} confirmed={item.confirmed} type="Patient"/>
 
-    const togglePending = () => {
-        if(pendingPressed===false) {
-            setPendingPressed(true)
-            setConfirmedPressed(false)
-        }
-    }
+    // const togglePending = () => {
+    //     if(pendingPressed===false) {
+    //         setPendingPressed(true)
+    //         setConfirmedPressed(false)
+    //     }
+    // }
 
-    const toggleConfirmed = () => {
-        if(confirmedPressed===false){
-            setConfirmedPressed(true)
-            setPendingPressed(false)
-        }
-    }
+    // const toggleConfirmed = () => {
+    //     if(confirmedPressed===false){
+    //         setConfirmedPressed(true)
+    //         setPendingPressed(false)
+    //     }
+    // }
 
     return(
         <View style={styles.container}>

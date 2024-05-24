@@ -45,7 +45,9 @@ const styles = StyleSheet.create({
     detail:{
         fontFamily: 'Poppins',
         fontSize: 16,
-        color: '#e5e5e5'
+        color: '#e5e5e5',
+        flex: 3,
+        textAlign: 'right'
     }
 })
 

@@ -1,4 +1,4 @@
-import { StyleSheet, StyleProp, TouchableOpacity, ViewStyle, GestureResponderEvent, Image, View, Text} from 'react-native';
+import { StyleSheet, StyleProp, TouchableOpacity, ViewStyle, GestureResponderEvent, Image, View, Text, SafeAreaView} from 'react-native';
 import { Dimensions } from 'react-native';
 import { useState } from 'react';
 import { useNavigation, Link, router, Redirect } from 'expo-router';
@@ -18,7 +18,7 @@ export default function Landing() {
     return(
 
     
-    <View style={styles.main}>
+    <SafeAreaView style={styles.main}>
          <View style={[styles.card, {flex: 3.5}]}>
          {/* <Image source={require('C:\Users\grace\Desktop\TBGuardian\TBGuardian\assets\images\placeholder_icon.png.png')} /> */}
             <Text style={[styles.appname, {paddingTop: height*0.4}]}>TBGuardian</Text>
@@ -27,6 +27,7 @@ export default function Landing() {
         <View style={styles.buttonContainer}>
 
         {/* <Link href="/workerlogin" asChild> */}
+    
         <TouchableOpacity onPress={() => router.push("/patientlogin")} style={styles.patientbutton}>
         {/* <TouchableOpacity style={[styles.button, {backgroundColor: '#023047'}]}> */}
             <Text style={styles.buttonText}>Login as Patient</Text>
@@ -34,14 +35,15 @@ export default function Landing() {
         {/* </Link> */}
 
 
-        <TouchableOpacity onPress={() => router.push("workerlogin")} style={styles.workerbutton}>
-            <Text style={styles.buttonText}>Login as Healthcare Worker</Text>
+        <TouchableOpacity onPress={() => router.push("/workerlogin")} style={styles.workerbutton}>
+            <Text style={styles.buttonText}>Login as Healthcare Worker / Admin</Text>
         </TouchableOpacity>
+
    
   
         </View>
         <View style={styles.footer}></View>
-      </View>
+      </SafeAreaView>
       )
 }
 
@@ -85,18 +87,19 @@ const styles = StyleSheet.create({
     },
     buttonText: {
       fontFamily: "Poppins",
-      fontSize: 16,
+      fontSize: 14,
       color: 'white'
     },
     buttonContainer:{
       marginTop: 30,
-      flex: 2
+      flex: 2.5
     },
     chooseText:{
       fontSize: 30,
       fontFamily: 'Heading',
       alignSelf: 'center',
       marginTop: 30,
+      flex: 0.5
     },
     footer:{
       backgroundColor: '#219EBC',

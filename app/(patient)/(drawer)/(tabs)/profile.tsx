@@ -11,6 +11,7 @@ export default function Profile({ session }: { session: Session }) {
     const [loading, setLoading] = useState(false);
     const [age, setAge] = useState(0);
     const [birthdaystring, setBirthdayString] = useState("")
+     const [dateString, setDateString] = useState("")
     
     useEffect(() => {
         if (user) {
@@ -22,7 +23,9 @@ export default function Profile({ session }: { session: Session }) {
         setLoading(true)
         if(user){
             const newBirthday = new Date(user.birthday)
-            setBirthdayString(newBirthday.toDateString())
+            setBirthdayString(newBirthday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }))
+            const dateStarted = new Date(user.date_started)
+            setDateString( dateStarted.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }))
             const currentDate = new Date();
             const difference = currentDate.getTime() - newBirthday.getTime();
             const calculatedAge = Math.floor(difference / (1000 * 60 * 60 * 24 * 365.25));
@@ -32,7 +35,7 @@ export default function Profile({ session }: { session: Session }) {
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: Palette.accent }}>
+        <ScrollView style={{ flex: 1, backgroundColor: Palette.accent }}>
             {!loading && user && (
                 <View>
                     <View style={styles.header}>
@@ -45,21 +48,24 @@ export default function Profile({ session }: { session: Session }) {
                         </Link>
                     </View>
                     <ScrollView style={styles.details}>
-                        <ProfileDetails title="Program" detail={"Placeholder program"} />
-                        <ProfileDetails title="Assigned DOTS Center" detail={"Placeholder center"} />
+
                         <ProfileDetails title="Age" detail={age.toString()} />
                         <ProfileDetails title="Gender" detail={user?.gender} />
-                        <ProfileDetails title="Blood Type" detail={"AB-"} />
+             
                         <ProfileDetails title="Height" detail={`${user?.height} cm`} />
                         <ProfileDetails title="Weight" detail={`${user?.weight} kg`} />
                         
                         <ProfileDetails title="Date of Birth" detail={birthdaystring} />
                
                         <ProfileDetails title="Address" detail={user?.address} />
+                        <ProfileDetails title="Treatment Regimen" detail={user?.treatment_regimen} />
+                        <ProfileDetails title="Disease Class" detail={user?.disease_class} />
+                        <ProfileDetails title="Registration Group" detail={user?.registration_group} />
+                        <ProfileDetails title="Date Started" detail={dateString} />
                     </ScrollView>
                 </View>
             )}
-        </View>
+        </ScrollView>
     );
 }
 

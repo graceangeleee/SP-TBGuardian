@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, Text, View, Button, SafeAreaView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Button, SafeAreaView, Alert, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
 import { Camera, CameraView } from 'expo-camera';
 import { ResizeMode, Video } from 'expo-av';
 import * as MediaLibrary from 'expo-media-library';
@@ -11,7 +11,13 @@ import * as ImagePicker from 'expo-image-picker';
 import { decode } from 'base64-arraybuffer';
 import { router } from 'expo-router';
 import { useUserData } from './_layout';
+import Palette from '../../Constants/Palette';
 
+interface VideoAsset {
+  uri: string;
+  type: string;
+  assetId: string; // Change to non-nullable string
+}
 
 export default function RecordVideo() {
   let cameraRef = useRef<CameraView>(null);
@@ -24,7 +30,7 @@ export default function RecordVideo() {
   const [facing, setFacing] = useState<CameraType>(CameraType.back);
   const params = useLocalSearchParams();
   const {submissionid} = params;
-  const {setPending, user} = useUserData()
+  const {user} = useUserData()
 
 
   useEffect(() => {
@@ -66,42 +72,42 @@ export default function RecordVideo() {
 
   if (video) {
 
-    async function getPendingDetails() {
+  //   async function getPendingDetails() {
     
-      const date = new Date().toISOString();
-      try {
-          if (user?.id === null || user?.id === "") {
-              throw new Error('No user logged in');
-          } else {
-              const { data, error, status } = await supabase
-                  .from('submissions')
-                  .select()
-                  .eq("patientid", user?.id) 
-                  .gte("deadline", date)
+  //     const date = new Date().toISOString();
+  //     try {
+  //         if (user?.id === null || user?.id === "") {
+  //             throw new Error('No user logged in');
+  //         } else {
+  //             const { data, error, status } = await supabase
+  //                 .from('submissions')
+  //                 .select()
+  //                 .eq("patientid", user?.id) 
+  //                 .gte("deadline", date)
 
 
-              if (error && status !== 406) {
-                  throw error;
-              }
+  //             if (error && status !== 406) {
+  //                 throw error;
+  //             }
 
-              if (data) {
-                  data.sort((a, b) => a.number - b.number)
-                  setPending(data)
-              }
-          }
-      } catch (error) {
-          if (error instanceof Error) {
-              Alert.alert(error.message)
-          }
-      }  
-  }
+  //             if (data) {
+  //                 data.sort((a, b) => a.number - b.number)
+  //             }
+  //         }
+  //     } catch (error) {
+  //         if (error instanceof Error) {
+  //             Alert.alert(error.message)
+  //         }
+  //     }  
+  // }
 
     //function that will update the submission with the id of the video submitted
-    const updateSubmission = async (videopath: string) => {
+    const updateSubmission = async (videopath: string, creationDate: Date) => {
+      const date = new Date().toISOString();
       try{
           const {error} = await supabase
           .from('submissions')
-          .update({videopath: videopath, status: "TRUE"})
+          .update({videopath: videopath, status: "TRUE", date_submitted: date, video_taken: creationDate})
           .eq("id", submissionid)
 
           if(error){
@@ -109,8 +115,9 @@ export default function RecordVideo() {
             console.log("Failed to update the submission bin")
         
           } else{
-            getPendingDetails()
-            router.replace('/submissionbin')
+            // getPendingDetails()
+            router.navigate('patientdashboard')
+           
           }
           
           
@@ -131,13 +138,18 @@ export default function RecordVideo() {
       const result = await ImagePicker.launchImageLibraryAsync(options);
 
       if(!result.canceled){
-        const img = result.assets[0];
+        const img = result.assets[0] as VideoAsset;
         const base64 = await FileSystem.readAsStringAsync(img.uri, {encoding: 'base64'});
         const filePath = `${submissionid}.${img.type === 'image' ? 'png' : 'mp4'}`;
         const contentType = img.type === 'image' ? 'image/png' : 'video/mp4'
 
+  
+
         setUploading(true)
         try{
+          const assetInfo = await MediaLibrary.getAssetInfoAsync(img.assetId);
+        
+          const creationDate = new Date(assetInfo.creationTime)
           const {data, error} = await supabase.storage
           .from("videos")
           .upload(filePath, decode(base64), { contentType});
@@ -145,9 +157,11 @@ export default function RecordVideo() {
           if(error) console.log(error)
           
 
-          if(data) updateSubmission(data?.path)
+          if(data) updateSubmission(data?.path, creationDate)
           setUploading(false)
           Alert.alert("Successfully submitted video")
+          router.replace('/patientdashboard')
+          router.push('/submissionbin')
         }catch(error){
           if(error instanceof Error)console.log(error.message)
         }
@@ -172,15 +186,28 @@ export default function RecordVideo() {
     return (
       
       <SafeAreaView style={styles.container}>
+        {uploading && (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text>Uploading Video</Text>
+          </View>
+        )}
         <Video
           style={styles.video}
           source={{ uri: video }}
           resizeMode={ResizeMode.COVER}
           isLooping
+          
         />
-        <Button title="Submit" onPress={submitVideo } />
-        {hasMediaLibraryPermission ? <Button title="Save" onPress={saveVideo} /> : undefined}
-        <Button title="Discard" onPress={() => setVideo(undefined)} />
+        <View style={{flexDirection: 'row', alignItems: 'center', height: '10%', justifyContent: 'center', alignContent: 'center'}}>
+          <TouchableOpacity onPress={submitVideo} style={{backgroundColor: Palette.accent, alignItems: 'center', flex: 1, borderRadius: 20, height: '95%', justifyContent: 'center', marginHorizontal: 5}}>
+              <Text style={{fontFamily: 'Poppins', fontSize: 16, color: 'white'}}>Submit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={()=> setVideo(undefined)} style={{backgroundColor: Palette.buttonOrLines, alignItems: 'center', flex: 1, borderRadius: 20, height: '95%', justifyContent: 'center', marginHorizontal: 5}}>
+            <Text style={{fontFamily: 'Poppins', fontSize: 16, color: 'white'}}>Discard</Text>
+          </TouchableOpacity>
+
+        </View>
       </SafeAreaView>
     );
   }
@@ -191,6 +218,12 @@ export default function RecordVideo() {
 
   return (
     <View style={styles.container}>
+       {uploading && (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text>Uploading Video</Text>
+          </View>
+      )}
       <CameraView style={styles.camera} facing={facing} ref={cameraRef} mode='video'>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
@@ -220,7 +253,7 @@ const styles = StyleSheet.create({
   //   justifyContent: 'center',
   // },
   video: {
-    flex: 1,
+    height: '90%',
     alignSelf: "stretch"
   },
   container: {

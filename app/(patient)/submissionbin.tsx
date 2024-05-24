@@ -7,9 +7,9 @@ import { useLocalSearchParams } from "expo-router";
 import * as SecureStore from 'expo-secure-store';
 import { supabase } from "../../supabase";
 import { Session } from "@supabase/supabase-js";
-import { commentType } from "../../Constants/Types";
+import { commentType, submissionType } from "../../Constants/Types";
 import { Link } from "expo-router";
-import { useUserData } from "./_layout";
+
 
 interface NewComment {
     content: string,
@@ -19,17 +19,27 @@ interface NewComment {
 
 const SubmissionBin = () => {
     const params = useLocalSearchParams();
-    const {status, id } = params;
+    const {status, id, type, submissionid} = params;
     const [submissionstatus, setSubmissionStatus] = useState("");
-    const description = "Placeholder description";
+    const [description, setDescription] = useState("")
     const [comment, setComment] = useState("");
     const [comments, setComments] = useState<commentType[]>([]);
-    const { pending } = useUserData();
+    const [pending, setPending] = useState<submissionType>()
+    const [missing, setMissing] = useState<submissionType>()
+    const [loading, setLoading] = useState(true)
 
 
     useEffect(() => {
+        if(type==="Ongoing"){
+            getSubmissionDetails()
+        }else{
+            getMissingDetails()
+        }
+
         getComments()
-    }, [pending]);
+        
+        changeDescription()
+    }, []);
 
     useEffect(() => {
         if (status === "false") {
@@ -38,6 +48,80 @@ const SubmissionBin = () => {
             setSubmissionStatus("Done");
         }
     }, []);
+
+    const changeDescription =  () => {
+        if(type==="Ongoing"){
+            setDescription("Please take a clear video of yourself taking in the medication for TB")
+        }else{
+            setDescription("Please take a clear video of yourself taking in the medication of the drugs. Additionally, please make it visible in the video the current date and time that you are taking the drugs")
+        }
+    }
+
+    const getSubmissionDetails = async() => {
+        setLoading(true);
+        const date = new Date().toISOString();
+        const id = await SecureStore.getItemAsync("id");
+        try {
+          if (!id) {
+            throw new Error('No user logged in');
+          } else {
+            const { data, error, status } = await supabase
+              .from('submissions')
+              .select()
+              .eq('patientid', id)
+              .gt('deadline', date);
+    
+            if (error && status !== 406) {
+              throw error;
+            }
+    
+            if (data) {
+              data.sort((a, b) => a.number - b.number);
+              setPending(data[0]);
+          
+            }
+          }
+        } catch (error) {
+          if (error instanceof Error) {
+            Alert.alert(error.message);
+          }
+        } finally {
+          setLoading(false);
+        }
+    }
+
+    const getMissingDetails = async() => {
+
+        setLoading(true);
+        const date = new Date().toISOString()
+        
+        try {
+         
+          
+            const { data, error, status } = await supabase
+              .from('submissions')
+              .select()
+              .eq("id", submissionid)
+              .single()
+              
+    
+            if (error && status !== 406) {
+              throw error;
+            }
+    
+            if (data) {
+              setPending(data)
+          
+            }
+          
+        } catch (error) {
+          if (error instanceof Error) {
+            Alert.alert(error.message);
+          }
+        } finally {
+          setLoading(false);
+        }
+    }
 
     async function getComments() {
         try {
@@ -139,28 +223,39 @@ const SubmissionBin = () => {
         <ScrollView>
             {pending !== null && (
                 <View>
-                    <Text style={styles.title}>SUBMISSION DETAILS</Text>
-                    {pending && pending.length > 0 && (
+                    {pending && (
                     <View style={styles.card}>
                         <View style={styles.cardheading}>
-                            <Text style={styles.cardtitle}>Submission #{pending[0].number} </Text>
+                            <Text style={styles.cardtitle}>Submission #{pending.number} </Text>
+                            <Text style={styles.cardtitle}>Status: {pending?.verified && pending.status? "Verified by Worker" : pending?.status ? "Submitted"  : "Pending"}</Text>
+
                         </View>
-                        <Text style={styles.cardtitle}>Status: {pending[0]?.verified && pending[0].status? "Verified by Worker" : pending[0]?.status ? "Submitted"  : "Pending"}</Text>
                         <View style={styles.cardheading}>
-                            <Text style={styles.cardsubtitle}>{pending[0].deadline}</Text>
+                            <Text style={styles.cardsubtitle}>Deadline: {pending.deadline}</Text>
+                            {/* {pending.status && (
+                                 <Text style={styles.cardsubtitle}>Video Taken: {pending?.video_taken?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
+                            )} */}
                         </View>
-                        <Text style={styles.description}>Placeholder description</Text>
+                        <Text style={styles.description}>{description}</Text>
                         
-                            {pending[0].status? (
+                            {pending.status? (
                                 <TouchableOpacity disabled style={[{backgroundColor: Palette.lightGray}, styles.button]}>
                                     <Text style={styles.buttontext}>Already submitted Video</Text>
                                 </TouchableOpacity>
                             ): (
-                                <Link href={{ pathname: "/recordvideo", params:{submissionid: pending[0].id}}} style={[styles.button, {backgroundColor: Palette.shadowAccent}]}>
-                                    <TouchableOpacity>
+                                <TouchableOpacity style={{ backgroundColor: Palette.accent, width: '95%', borderRadius: 20, marginTop: 10, alignSelf: 'center', justifyContent: 'center', alignItems: 'center', padding: 10 }}>
+                                    {type==="Patient Missing"? (
+                                        <Link href={{ pathname: "/choosevideo", params:{submissionid: submissionid}}} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                                         <Text style={styles.buttontext}>Submit a Video</Text>
-                                    </TouchableOpacity>
-                                </Link>
+                                        </Link>
+                                    ):(
+                                        <Link href={{ pathname: "/recordvideo", params:{submissionid: pending.id}}} style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                        <Text style={styles.buttontext}>Submit a Video</Text>
+                                        </Link>
+                                    )}
+                                    
+                                </TouchableOpacity>
+
                             )}
                             
                         
@@ -179,8 +274,6 @@ const SubmissionBin = () => {
                         ))}
                     </View>
                     <View style={styles.input}>
-                        <FontAwesome6 style={{ flex: 1 }} name="paperclip" size={24} color="black" />
-                        <FontAwesome6 style={[styles.margin, { flex: 1 }]} name="image" size={24} color="black" />
                         <TextInput onChangeText={setComment} style={[styles.margin, { fontFamily: 'Poppins', flex: 6 }]} multiline={true} placeholder="Insert comment here" />
                         <FontAwesome onPress={addComment} style={{ flex: 1 }} name="send" size={24} color="black" />
                     </View>
@@ -199,27 +292,35 @@ const styles = StyleSheet.create({
         marginLeft: 20
     },
     card:{
-        backgroundColor: Palette.focused,
+        backgroundColor: Palette.buttonOrLines,
         borderRadius: 20,
         padding: 15,
-        margin: 15
+        margin: 15,
+        
     },
     cardheading:{
         backgroundColor: 'transparent',
-        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+        overflow: 'visible'
     },
     cardtitle:{
-        fontFamily: 'Heading',
+        fontFamily: 'Subheading',
         fontSize: 20,
+        color: 'white',
+
     },
     cardsubtitle:{
-        fontFamily: 'Heading',
+        fontFamily: 'Poppins',
         fontSize: 16,
+        color: 'white'
     },
     description:{
         marginTop: 15,
         fontFamily: 'Poppins',
-        fontSize: 16
+        fontSize: 16,
+        color: 'white',
+        paddingHorizontal: 10
     },
     button:{
         marginTop: 15,
@@ -230,8 +331,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     buttontext:{
-        fontFamily: 'Heading',
-        fontSize: 20
+        fontFamily: 'Poppins',
+        fontSize: 16,
+        alignSelf: 'center',
+        textAlign: 'center'
     },
     input:{
         flexDirection: 'row',

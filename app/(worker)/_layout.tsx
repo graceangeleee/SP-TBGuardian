@@ -10,12 +10,6 @@ interface WorkerDataContext {
   setMonitoring: React.Dispatch<React.SetStateAction<userType[] | null>>;
   done: userType[] | null ;
   setDone: React.Dispatch<React.SetStateAction<userType[] | null>>;
-  missing: submissionType[] | null;
-  setMissing: React.Dispatch<React.SetStateAction<submissionType[] | null>>;
-  unverified: submissionType[] | null;
-  setUnverified: React.Dispatch<React.SetStateAction<submissionType[] | null>>;
-  verified: submissionType[] | null;
-  setVerified: React.Dispatch<React.SetStateAction<submissionType[] | null>>;
   userid: string;
   setUserID: React.Dispatch<React.SetStateAction<string>>;
   user: userType | null;
@@ -48,15 +42,12 @@ interface WorkerDataProviderProps {
 export const WorkerDataProvider: React.FC<WorkerDataProviderProps> = ({ children }) => {
   const [monitoring, setMonitoring] = useState<userType[] | null>(null);
   const [done, setDone] = useState<userType[] | null>(null);
-  const [missing, setMissing] = useState<submissionType[] | null>(null);
-  const [unverified, setUnverified] = useState<submissionType[] | null>(null);
-  const [verified, setVerified] = useState<submissionType[] | null>(null);
   const [user, setUser] = useState<userType | null>(null);
   const [userid, setUserID] = useState("");
 
 
   return (
-    <WorkerDataContext.Provider value={{ monitoring, setMonitoring, done, setDone, missing, setMissing, unverified, setUnverified, user, setUser, userid, setUserID, verified, setVerified }}>
+    <WorkerDataContext.Provider value={{ monitoring, setMonitoring, done, setDone, user, setUser, userid, setUserID,  }}>
       {children}
     </WorkerDataContext.Provider>
   );
@@ -68,17 +59,18 @@ export default function Layout() {
       <Stack screenOptions={{headerShown: false}}>
         {/* <Stack.Screen name="(drawer)" options={{ headerShown: false }} initialParams={{ usertype: "patient" }} /> */}
         {/* <Stack.Screen name="modal" options={{ presentation: 'modal' }} /> */}
-        <Stack.Screen name="addpatient" options={{ headerTitle: "Add Patient", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="patientcardlist" options={{ headerTitle: "Patient List", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="missinglist" options={{ headerTitle: "Missing Submissions", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="submissioncardlist" options={{ headerTitle: "Submissions List", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="dailysubmissions" options={{ headerTitle: "Unverified Submissions", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="workerschedule" options={{ headerTitle: "Schedule", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="submissionpreview" options={{ headerTitle: "Submission Bin", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="videoviewer" options={{ headerTitle: "Playing Video", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="setschedule" options={{presentation: 'modal', headerTitle: "Set a Schedule", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="patientprofile" options={{ headerTitle: "Patient Profile", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
-        <Stack.Screen name="editworkerpass" options={{ headerTitle: "Edit Password", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="addpatient" options={{headerShown: true,  headerTitle: "Add Patient", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="patientcardlist" options={{ headerShown: true, headerTitle: "Patient List", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="missinglist" options={{ headerShown: true, headerTitle: "Missing Submissions", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="submissioncardlist" options={{headerShown: true,  headerTitle: "Submissions List", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="dailysubmissions" options={{ headerShown: true, headerTitle: "Unverified Submissions", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="workerschedule" options={{ headerShown: true, headerTitle: "Schedule", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="submissionpreview" options={{headerShown: true,  headerTitle: "Submission Bin", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="videoviewer" options={{ headerShown: true, headerTitle: "Playing Video", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="setschedule" options={{headerShown: true, presentation: 'modal', headerTitle: "Set a Schedule", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="patientprofile" options={{ headerShown: true, headerTitle: "Patient Profile", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="editworkerpass" options={{ headerShown: true, headerTitle: "Edit Password", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
+        <Stack.Screen name="duetoday" options={{ headerShown: true, headerTitle: "Due Today", headerBackTitle: "Back", headerTintColor: Palette.buttonOrLines }} />
         {/* <Stack.Screen name="submissionbin" options={{ presentation: 'modal' }} /> */}
       </Stack>
     </WorkerDataProvider>

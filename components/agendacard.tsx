@@ -19,6 +19,9 @@ interface AgendaCardProps {
 const AgendaCard: React.FC<AgendaCardProps> = ({ id, patientid, workerid, content, date, time, confirmed, type }) => {
     const [patient, setPatient] = useState<userType>();
     const [loading, setLoading] = useState(false);
+    const dateformat = new Date(date)
+    const datestring = dateformat.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+ 
 
     useEffect(() => {
         getPatientDetails();
@@ -57,7 +60,7 @@ const AgendaCard: React.FC<AgendaCardProps> = ({ id, patientid, workerid, conten
                     <View>
                         <Text style={styles.name}>{patient?.firstname} {patient?.lastname}</Text>
                         <Text style={styles.details}>{content}</Text>
-                        <Text style={styles.details}>{date}   |   {time}</Text>
+                        <Text style={styles.details}>{datestring}   |   {time}</Text>
                         {/* <Text style={styles.details}>Remaining Submissions: {content.to_submit}</Text> */}
                     </View>
                     
