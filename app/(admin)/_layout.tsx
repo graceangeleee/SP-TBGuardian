@@ -62,8 +62,9 @@ export default function Layout() {
         <Stack.Screen name="admin_workers" options={{headerShown: true, headerBackTitle:"Back", headerTitle: "Registered Workers"}}/>
         <Stack.Screen name="admin_workerprofile" options={{headerShown: true, headerBackTitle:"Back", headerTitle: "Worker's Profile"}}/>
         <Stack.Screen name="admin_patientprofile" options={{headerShown: true, headerBackTitle:"Back", headerTitle: "Patient's Profile"}}/>
-
-
+        <Stack.Screen name="admin_missing" options={{headerShown: true, headerBackTitle:"Back", headerTitle: "Missing Submissions"}}/>
+        <Stack.Screen name="admin_duetoday" options={{headerShown: true, headerBackTitle:"Back", headerTitle: "Missing Submissions"}}/>
+        <Stack.Screen name="admin_agenda" options={{headerShown: true, headerBackTitle:"Back", headerTitle: "Sputum Schedule"}}/>
       </Stack>
    
   );
