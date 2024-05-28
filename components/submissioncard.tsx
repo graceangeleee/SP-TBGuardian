@@ -12,10 +12,11 @@ interface SubmissionCardProps {
     type: string;
     smsAvailable?: boolean;
     updateData?: () => void;
+    usertype?: string
 
 }
 
-const SubmissionCard: React.FC<SubmissionCardProps> = ({ content, type, smsAvailable, updateData}) => {
+const SubmissionCard: React.FC<SubmissionCardProps> = ({ content, type, smsAvailable, updateData, usertype}) => {
     const [user, setUser] = useState<userType>();
     const [loading, setLoading] = useState(false);
 
@@ -150,6 +151,9 @@ const SubmissionCard: React.FC<SubmissionCardProps> = ({ content, type, smsAvail
                         </Link>
                     </TouchableOpacity>
                     )}
+                    {/* {type === "Admin Missing" && (
+                        renderUserDetails()
+                    )} */}
                 </View>
             )}
         </>

@@ -80,26 +80,41 @@ export default function AdminDashboard({session}: {session: Session}) {
             :
                 (
                 <ScrollView>
-                    <View style={{padding: 15, flexDirection: 'row'}}>
-                        <Text style={{flex: 4, fontFamily: 'Heading', fontSize: 20, alignSelf: 'center'}}>
+                    <TouchableOpacity style={[styles.buttonContainer, {backgroundColor: Palette.darkGray, marginTop: 10, }]}>
+                        <Link href={{pathname: '/admin_missing'}}>
+                            <Text style={styles.buttonText}>MISSING</Text>
+                        </Link>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.buttonContainer, {backgroundColor: Palette.darkGray, marginTop: 10, }]}>
+                        <Link href={{pathname: '/admin_duetoday'}}>
+                            <Text style={styles.buttonText}>DUE TODAY</Text>
+                        </Link>
+                    </TouchableOpacity>
+                    <View style={{padding: 15, flexDirection: 'row', justifyContent: 'space-around'}}>
+                        {/* <Text style={{flex: 4, fontFamily: 'Heading', fontSize: 20, alignSelf: 'center'}}>
                             Register a new patient?
-                        </Text>
-                        <Link href="/admin_addpatient" asChild style={{flex: 1, justifyContent: 'center'}}>
+                        </Text> */}
+                        <Link href="/admin_addpatient" asChild style={{flex: 1, justifyContent: 'center', backgroundColor: Palette.accent}}>
                             <TouchableOpacity style={styles.addButton}>
                                 <Text style={styles.buttonText}>Add Patient</Text>
                             </TouchableOpacity>
                         </Link>
-                    </View>
-                    <View style={{padding: 15, flexDirection: 'row'}}>
-                        <Text style={{flex: 4, fontFamily: 'Heading', fontSize: 20, alignSelf: 'center'}}>
+                    {/* </View>
+                    <View style={{padding: 15, flexDirection: 'row'}}> */}
+                        {/* <Text style={{flex: 4, fontFamily: 'Heading', fontSize: 20, alignSelf: 'center'}}>
                             Register a new worker?
-                        </Text>
-                        <Link href="/admin_addworker" asChild style={{flex: 1, justifyContent: 'center'}}>
+                        </Text> */}
+                        <Link href="/admin_addworker" asChild style={{flex: 1, justifyContent: 'center', backgroundColor: Palette.buttonOrLines}}>
                             <TouchableOpacity style={styles.addButton}>
                                 <Text style={styles.buttonText}>Add Worker</Text>
                             </TouchableOpacity>
                         </Link>
                     </View>
+                    <Link href={{pathname: "/admin_agenda"}} asChild>
+                        <TouchableOpacity style={styles.buttonContainer}>
+                            <Text style={styles.dashboardText}>APPOINTMENTS</Text> 
+                        </TouchableOpacity>
+                    </Link>
                     
 
                     <Link href={{pathname: "/admin_patients"}} asChild style={[styles.cardContainer, {backgroundColor: Palette.focused}]}>
@@ -124,6 +139,7 @@ export default function AdminDashboard({session}: {session: Session}) {
                         </TouchableOpacity>
                     </Link>
                     
+                    
 
 
                 </ScrollView>
@@ -138,11 +154,11 @@ const styles = StyleSheet.create({
         alignContent: 'center',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: Palette.buttonOrLines,
         borderRadius: 20,
         alignSelf: 'flex-end',
         height: 90,
         width: 90,
+        margin: 5
     },
     buttonText: {
         textAlign: 'center',

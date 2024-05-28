@@ -37,6 +37,16 @@ const Schedule: React.FC = () => {
             }
             if(data){
                 setAgenda(data)
+                const modifiedObject: { [key: string]: { marked: boolean, dotColor?: string, customStyles?: { container: { backgroundColor: string } } } } = {};
+
+                data.forEach(obj => {
+                    const dateKey = obj.date.split('T')[0]; // Ensure only the date part is used
+                    const customStyle = { container: { backgroundColor: obj.verified === "TRUE" ? 'green' : 'red' } };
+                    modifiedObject[dateKey] = { marked: true, dotColor: 'green', customStyles: customStyle };
+                });
+    
+                setMarkedDates(modifiedObject);
+                console.log(modifiedObject);
             }
 
         }catch(error){

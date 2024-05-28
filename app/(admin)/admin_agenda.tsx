@@ -9,10 +9,10 @@ import AgendaCard from "../../components/agendacard";
 import * as SecureStore from 'expo-secure-store';
 
 
-const WorkerSchedule: React.FC = () => {
-    const [markedDates, setMarkedDates] = useState<{ [date: string]: { marked: boolean } }>({});
+const AdminSchedule: React.FC = () => {
     const [agenda, setAgenda] = useState<agendaType[]>([]);
     const [loading, setLoading] = useState(false);
+    const [markedDates, setMarkedDates] = useState<{ [date: string]: { selected?: boolean, marked?: boolean, selectedColor?: string, customStyles?: { container: { backgroundColor: string } } } }>({});
 
     useEffect(() => {
         getAgenda();
@@ -45,7 +45,6 @@ const WorkerSchedule: React.FC = () => {
                 .from('agenda')
                 .select()
                 .eq("status", "FALSE")
-                .eq("workerid", userid)
                 .gt("date", date)
                 
 
@@ -56,7 +55,6 @@ const WorkerSchedule: React.FC = () => {
             if (data) {
                 data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                 setAgenda(data);
-
                 const modifiedObject: { [key: string]: { marked: boolean, dotColor?: string, customStyles?: { container: { backgroundColor: string } } } } = {};
 
                 data.forEach(obj => {
@@ -114,7 +112,7 @@ const WorkerSchedule: React.FC = () => {
     );
 };
 
-export default WorkerSchedule;
+export default AdminSchedule;
 
 const styles = StyleSheet.create({
     container: {
